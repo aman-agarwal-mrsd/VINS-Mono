@@ -12,7 +12,7 @@
 #include "parameters.h"
 #include "utility/visualization.h"
 
-
+//Initialize main estimator object
 Estimator estimator;
 
 std::condition_variable con;
@@ -214,18 +214,19 @@ void process()
         std::unique_lock<std::mutex> lk(m_buf);
         con.wait(lk, [&]
                  {
+                     // Populate measurements with vector of imu readings and vector of point clouds
             return (measurements = getMeasurements()).size() != 0;
                  });
         lk.unlock();
         m_estimator.lock();
         for (auto &measurement : measurements)
         {
-            auto img_msg = measurement.second;
+            auto img_msg = measurement.second; // point cloud measurements
             double dx = 0, dy = 0, dz = 0, rx = 0, ry = 0, rz = 0;
-            for (auto &imu_msg : measurement.first)
+            for (auto &imu_msg : measurement.first) // imu measurements
             {
-                double t = imu_msg->header.stamp.toSec();
-                double img_t = img_msg->header.stamp.toSec() + estimator.td;
+                double t = imu_msg->header.stamp.toSec(); // imu time
+                double img_t = img_msg->header.stamp.toSec() + estimator.td; //image time (TD set in parameters.cpp)
                 if (t <= img_t)
                 { 
                     if (current_time < 0)
@@ -239,6 +240,7 @@ void process()
                     rx = imu_msg->angular_velocity.x;
                     ry = imu_msg->angular_velocity.y;
                     rz = imu_msg->angular_velocity.z;
+                    // processIMU updates pre_integrations
                     estimator.processIMU(dt, Vector3d(dx, dy, dz), Vector3d(rx, ry, rz));
                     //printf("imu: dt:%f a: %f %f %f w: %f %f %f\n",dt, dx, dy, dz, rx, ry, rz);
 
