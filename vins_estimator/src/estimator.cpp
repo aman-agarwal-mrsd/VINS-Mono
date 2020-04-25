@@ -123,10 +123,11 @@ void Estimator::processImage(const map<int, vector<pair<int, Eigen::Matrix<doubl
 {
     ROS_DEBUG("new image coming ------------------------------------------");
     ROS_DEBUG("Adding feature points %lu", image.size());
-    if (f_manager.addFeatureCheckParallax(frame_count, image, td)) //checks parallax (in feature)
-        marginalization_flag = MARGIN_OLD; //0
+    if (f_manager.addFeatureCheckParallax(frame_count, image, td))
+        //if parallax don't marginalize out image
+        marginalization_flag = MARGIN_OLD;
     else
-        marginalization_flag = MARGIN_SECOND_NEW; //1
+        marginalization_flag = MARGIN_SECOND_NEW;
 
     ROS_DEBUG("this frame is--------------------%s", marginalization_flag ? "reject" : "accept");
     ROS_DEBUG("%s", marginalization_flag ? "Non-keyframe" : "Keyframe");
@@ -134,19 +135,20 @@ void Estimator::processImage(const map<int, vector<pair<int, Eigen::Matrix<doubl
     ROS_DEBUG("number of feature: %d", f_manager.getFeatureCount());
     Headers[frame_count] = header;
 
-    ImageFrame imageframe(image, header.stamp.toSec()); //initial/initial_alignment.cpp
-    imageframe.pre_integration = tmp_pre_integration; //IntegrationBase object from factor/intragration_base.h
-    all_image_frame.insert(make_pair(header.stamp.toSec(), imageframe));
+    ImageFrame imageframe(image, header.stamp.toSec());
+    imageframe.pre_integration = tmp_pre_integration;
+    all_image_frame.insert(make_pair(header.stamp.toSec(), imageframe)); //current image frame into all image frames
     tmp_pre_integration = new IntegrationBase{acc_0, gyr_0, Bas[frame_count], Bgs[frame_count]};
 
-    if(ESTIMATE_EXTRINSIC == 2) //initial estimate has not been calculated, will be 1 when that's done
+    if(ESTIMATE_EXTRINSIC == 2)
     {
+        //check if extrinsic calculated, 2 means not calculated, set to 1 when extrnsic calculated
+        //calculate extrinsic between IMU and camera frame
         ROS_INFO("calibrating extrinsic param, rotation movement is needed");
         if (frame_count != 0)
         {
             vector<pair<Vector3d, Vector3d>> corres = f_manager.getCorresponding(frame_count - 1, frame_count);
             Matrix3d calib_ric;
-            // initial_ex_rotation object helps to calibrate extrinsic rotation between camera and imu
             if (initial_ex_rotation.CalibrationExRotation(corres, pre_integrations[frame_count]->delta_q, calib_ric))
             {
                 ROS_WARN("initial extrinsic rotation calib success");
@@ -160,21 +162,19 @@ void Estimator::processImage(const map<int, vector<pair<int, Eigen::Matrix<doubl
 
     if (solver_flag == INITIAL)
     {
-        /*Solve Initial transformation from sfm, pnp?*/
         if (frame_count == WINDOW_SIZE)
         {
             bool result = false;
             if( ESTIMATE_EXTRINSIC != 2 && (header.stamp.toSec() - initial_timestamp) > 0.1)
             {
-            //solves for initial estimate from  performing sfm & pnp, updates stored in Estimator::all_image_frame (stores transformation of that frame)
-               result = initialStructure(); 
+               result = initialStructure();
                initial_timestamp = header.stamp.toSec();
             }
             if(result)
             {
-                solver_flag = NON_LINEAR; //update solver flag
-                solveOdometry(); //??
-                slideWindow(); //??
+                solver_flag = NON_LINEAR;
+                solveOdometry();
+                slideWindow();
                 f_manager.removeFailures();
                 ROS_INFO("Initialization finish!");
                 last_R = Rs[WINDOW_SIZE];
@@ -191,7 +191,7 @@ void Estimator::processImage(const map<int, vector<pair<int, Eigen::Matrix<doubl
     else
     {
         TicToc t_solve;
-        solveOdometry(); // triangulate?
+        solveOdometry();
         ROS_DEBUG("solver costs: %fms", t_solve.toc());
 
         if (failureDetection())
@@ -219,7 +219,6 @@ void Estimator::processImage(const map<int, vector<pair<int, Eigen::Matrix<doubl
         last_P0 = Ps[0];
     }
 }
-
 bool Estimator::initialStructure()
 {
     TicToc t_sfm;
@@ -252,17 +251,17 @@ bool Estimator::initialStructure()
         }
     }
     // global sfm
-    Quaterniond Q[frame_count + 1]; //frame_count == windowsize
+    Quaterniond Q[frame_count + 1];
     Vector3d T[frame_count + 1];
     map<int, Vector3d> sfm_tracked_points;
-    vector<SFMFeature> sfm_f; //SFMFeature: struct{state, id, observation, position, depth}
-    for (auto &it_per_id : f_manager.feature) //f_manager.feature: class FeaturePerId
+    vector<SFMFeature> sfm_f;
+    for (auto &it_per_id : f_manager.feature)
     {
-        int imu_j = it_per_id.start_frame - 1; 
+        int imu_j = it_per_id.start_frame - 1;
         SFMFeature tmp_feature;
         tmp_feature.state = false;
         tmp_feature.id = it_per_id.feature_id;
-        for (auto &it_per_frame : it_per_id.feature_per_frame) //vector of FeaturePerFrame (features)
+        for (auto &it_per_frame : it_per_id.feature_per_frame)
         {
             imu_j++;
             Vector3d pts_j = it_per_frame.point;
@@ -482,7 +481,7 @@ void Estimator::solveOdometry()
     if (solver_flag == NON_LINEAR)
     {
         TicToc t_tri;
-        f_manager.triangulate(Ps, tic, ric); //asserts that NUM_OF_CAM == 1
+        f_manager.triangulate(Ps, tic, ric); //to determine how far we have moved //asserts that NUM_OF_CAM == 1
         ROS_DEBUG("triangulation costs %f", t_tri.toc());
         optimization();
     }

@@ -95,8 +95,9 @@ void image_callback(const sensor_msgs::ImageConstPtr &image_msg)
     //ROS_INFO("image_callback!");
     if(!LOOP_CLOSURE)
         return;
+    //when a loop closure is detected do the following
     m_buf.lock();
-    image_buf.push(image_msg);
+    image_buf.push(image_msg); //push image to image buffer
     m_buf.unlock();
     //printf(" image time %f \n", image_msg->header.stamp.toSec());
 
@@ -116,8 +117,9 @@ void point_callback(const sensor_msgs::PointCloudConstPtr &point_msg)
     //ROS_INFO("point_callback!");
     if(!LOOP_CLOSURE)
         return;
+    // if a loop closure is detected 
     m_buf.lock();
-    point_buf.push(point_msg);
+    point_buf.push(point_msg); // put point message in the buffer
     m_buf.unlock();
     /*
     for (unsigned int i = 0; i < point_msg->points.size(); i++)
@@ -538,6 +540,7 @@ int main(int argc, char **argv)
     pub_camera_pose_visual = n.advertise<visualization_msgs::MarkerArray>("camera_pose_visual", 1000);
     pub_key_odometrys = n.advertise<visualization_msgs::Marker>("key_odometrys", 1000);
     pub_vio_path = n.advertise<nav_msgs::Path>("no_loop_path", 1000);
+    //goes to estimator as relocation
     pub_match_points = n.advertise<sensor_msgs::PointCloud>("match_points", 100);
 
     std::thread measurement_process;
