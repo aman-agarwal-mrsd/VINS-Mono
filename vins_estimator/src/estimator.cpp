@@ -181,7 +181,6 @@ void Estimator::processImage(const map<int, vector<pair<int, Eigen::Matrix<doubl
                 last_P = Ps[WINDOW_SIZE];
                 last_R0 = Rs[0];
                 last_P0 = Ps[0];
-                
             }
             else
                 slideWindow();
@@ -483,7 +482,7 @@ void Estimator::solveOdometry()
     if (solver_flag == NON_LINEAR)
     {
         TicToc t_tri;
-        f_manager.triangulate(Ps, tic, ric);
+        f_manager.triangulate(Ps, tic, ric); //asserts that NUM_OF_CAM == 1
         ROS_DEBUG("triangulation costs %f", t_tri.toc());
         optimization();
     }
