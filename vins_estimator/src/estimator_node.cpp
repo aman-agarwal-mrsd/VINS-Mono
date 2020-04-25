@@ -227,11 +227,12 @@ void process()
             {
                 double t = imu_msg->header.stamp.toSec(); // imu time
                 double img_t = img_msg->header.stamp.toSec() + estimator.td; //image time (TD set in parameters.cpp)
-                if (t <= img_t)
+                // Use the lower sensor time for dt:
+                if (t <= img_t) // if imu_t < img_t
                 { 
                     if (current_time < 0)
                         current_time = t;
-                    double dt = t - current_time;
+                    double dt = t - current_time; //use imu_t
                     ROS_ASSERT(dt >= 0);
                     current_time = t;
                     dx = imu_msg->linear_acceleration.x;
@@ -240,14 +241,15 @@ void process()
                     rx = imu_msg->angular_velocity.x;
                     ry = imu_msg->angular_velocity.y;
                     rz = imu_msg->angular_velocity.z;
-                    // processIMU updates pre_integrations
+                    /* processIMU updates pre_integrations, dt & lin_Acc & ang_vel buffers
+                        calculates Ps and Vs for current frame (position & velocity?), updates acc_0 and gyr_0 (to current) */
                     estimator.processIMU(dt, Vector3d(dx, dy, dz), Vector3d(rx, ry, rz));
                     //printf("imu: dt:%f a: %f %f %f w: %f %f %f\n",dt, dx, dy, dz, rx, ry, rz);
 
                 }
-                else
+                else // if img_t < imu_t
                 {
-                    double dt_1 = img_t - current_time;
+                    double dt_1 = img_t - current_time; //use img_t
                     double dt_2 = t - img_t;
                     current_time = img_t;
                     ROS_ASSERT(dt_1 >= 0);
@@ -261,6 +263,8 @@ void process()
                     rx = w1 * rx + w2 * imu_msg->angular_velocity.x;
                     ry = w1 * ry + w2 * imu_msg->angular_velocity.y;
                     rz = w1 * rz + w2 * imu_msg->angular_velocity.z;
+                    /* processIMU updates pre_integrations, dt & lin_Acc & ang_vel buffers
+                        calculates Ps and Vs for current frame (position & velocity?), updates acc_0 and gyr_0 (to current) */
                     estimator.processIMU(dt_1, Vector3d(dx, dy, dz), Vector3d(rx, ry, rz));
                     //printf("dimu: dt:%f a: %f %f %f w: %f %f %f\n",dt_1, dx, dy, dz, rx, ry, rz);
                 }
@@ -269,6 +273,7 @@ void process()
             sensor_msgs::PointCloudConstPtr relo_msg = NULL;
             while (!relo_buf.empty())
             {
+                // get the latest relo_msg from relo_buffer
                 relo_msg = relo_buf.front();
                 relo_buf.pop();
             }
