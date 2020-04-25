@@ -95,6 +95,7 @@ void update()
 
 }
 
+//getMeasurements function called in process function
 std::vector<std::pair<std::vector<sensor_msgs::ImuConstPtr>, sensor_msgs::PointCloudConstPtr>>
 getMeasurements()
 {
@@ -118,7 +119,7 @@ getMeasurements()
             feature_buf.pop();
             continue;
         }
-        sensor_msgs::PointCloudConstPtr img_msg = feature_buf.front();
+        sensor_msgs::PointCloudConstPtr img_msg = feature_buf.front(); //send feature into to img_msg 
         feature_buf.pop();
 
         std::vector<sensor_msgs::ImuConstPtr> IMUs;
@@ -130,7 +131,7 @@ getMeasurements()
         IMUs.emplace_back(imu_buf.front());
         if (IMUs.empty())
             ROS_WARN("no imu between two image");
-        measurements.emplace_back(IMUs, img_msg);
+        measurements.emplace_back(IMUs, img_msg); //create vector and push into object simultaneously, combine IMU and img_msg
     }
     return measurements;
 }
@@ -171,7 +172,7 @@ void feature_callback(const sensor_msgs::PointCloudConstPtr &feature_msg)
         return;
     }
     m_buf.lock();
-    feature_buf.push(feature_msg);
+    feature_buf.push(feature_msg); // puts new data into feature_buf which is of type queue<sensor_msgs::PointCloudConstPtr> 
     m_buf.unlock();
     con.notify_one();
 }
@@ -182,7 +183,7 @@ void restart_callback(const std_msgs::BoolConstPtr &restart_msg)
     {
         ROS_WARN("restart the estimator!");
         m_buf.lock();
-        while(!feature_buf.empty())
+        while(!feature_buf.empty()) //clears the featur buffer which hold point cloud info
             feature_buf.pop();
         while(!imu_buf.empty())
             imu_buf.pop();
@@ -200,6 +201,7 @@ void restart_callback(const std_msgs::BoolConstPtr &restart_msg)
 void relocalization_callback(const sensor_msgs::PointCloudConstPtr &points_msg)
 {
     //printf("relocalization callback! \n");
+    //stores point cloud and handeled in process function below?
     m_buf.lock();
     relo_buf.push(points_msg);
     m_buf.unlock();
@@ -339,7 +341,7 @@ void process()
         m_buf.lock();
         m_state.lock();
         if (estimator.solver_flag == Estimator::SolverFlag::NON_LINEAR)
-            update();
+            update(); // as part of update feature info is pushedto img_msg
         m_state.unlock();
         m_buf.unlock();
     }
