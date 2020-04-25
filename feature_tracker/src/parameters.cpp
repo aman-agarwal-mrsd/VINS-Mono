@@ -45,16 +45,16 @@ void readParameters(ros::NodeHandle &n)
     }
     std::string VINS_FOLDER_PATH = readParam<std::string>(n, "vins_folder");
 
-    fsSettings["image_topic"] >> IMAGE_TOPIC;
-    fsSettings["imu_topic"] >> IMU_TOPIC;
-    MAX_CNT = fsSettings["max_cnt"];
-    MIN_DIST = fsSettings["min_dist"];
+    fsSettings["image_topic"] >> IMAGE_TOPIC; //set to "/imu0"
+    fsSettings["imu_topic"] >> IMU_TOPIC; //set to "/cam0/image_raw"
+    MAX_CNT = fsSettings["max_cnt"]; //track max 150 featyres
+    MIN_DIST = fsSettings["min_dist"]; //min distance between two features, set to 30
     ROW = fsSettings["image_height"];
     COL = fsSettings["image_width"];
-    FREQ = fsSettings["freq"];
-    F_THRESHOLD = fsSettings["F_threshold"];
-    SHOW_TRACK = fsSettings["show_track"];
-    EQUALIZE = fsSettings["equalize"];
+    FREQ = fsSettings["freq"]; //set to 10Hz
+    F_THRESHOLD = fsSettings["F_threshold"]; // set to 1.0
+    SHOW_TRACK = fsSettings["show_track"]; //set to 1, publish tracking image as topic
+    EQUALIZE = fsSettings["equalize"]; // if image is too dark or light, turn on equalize to find enough features
     FISHEYE = fsSettings["fisheye"];
     if (FISHEYE == 1)
         FISHEYE_MASK = VINS_FOLDER_PATH + "config/fisheye_mask.jpg";
