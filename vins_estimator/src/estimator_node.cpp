@@ -39,15 +39,18 @@ bool init_feature = 0;
 bool init_imu = 1;
 double last_imu_t = 0;
 
+
 void predict(const sensor_msgs::ImuConstPtr &imu_msg)
 {
     double t = imu_msg->header.stamp.toSec();
+    // If IMU is not initialized yet
     if (init_imu)
     {
         latest_time = t;
         init_imu = 0;
         return;
     }
+
     double dt = t - latest_time;
     latest_time = t;
 
@@ -95,6 +98,7 @@ void update()
 
 }
 
+// Syncs messages between IMU and Img and outputs and outputs a vector of pairs of IMU and ImgPointCloud measurements
 //getMeasurements function called in process function
 std::vector<std::pair<std::vector<sensor_msgs::ImuConstPtr>, sensor_msgs::PointCloudConstPtr>>
 getMeasurements()
@@ -106,6 +110,7 @@ getMeasurements()
         if (imu_buf.empty() || feature_buf.empty())
             return measurements;
 
+        // If the newest IMU meas. is older than the oldest image measurement and some td
         if (!(imu_buf.back()->header.stamp.toSec() > feature_buf.front()->header.stamp.toSec() + estimator.td))
         {
             //ROS_WARN("wait for imu, only should happen at the beginning");
@@ -113,6 +118,7 @@ getMeasurements()
             return measurements;
         }
 
+        // If the oldest IMU meas. is newer than the oldest image measurement and some td
         if (!(imu_buf.front()->header.stamp.toSec() < feature_buf.front()->header.stamp.toSec() + estimator.td))
         {
             ROS_WARN("throw img, only should happen at the beginning");
