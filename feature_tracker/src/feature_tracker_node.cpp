@@ -15,9 +15,11 @@ vector<uchar> r_status;
 vector<float> r_err;
 queue<sensor_msgs::ImageConstPtr> img_buf;
 
+// Publishers for the 3 topics the node publishes to
 ros::Publisher pub_img,pub_match;
 ros::Publisher pub_restart;
 
+// Creating an array of FeatureTracker Objects equal to num of camera (here 1)
 FeatureTracker trackerData[NUM_OF_CAM];
 double first_image_time;
 int pub_count = 1;
@@ -27,17 +29,22 @@ bool init_pub = 0;
 
 void img_callback(const sensor_msgs::ImageConstPtr &img_msg)
 {
+    // If this is the first image after starting the node
     if(first_image_flag)
     {
         first_image_flag = false;
+        // Update the time the first image was recieved and since that was the last image so they have the same time
         first_image_time = img_msg->header.stamp.toSec();
         last_image_time = img_msg->header.stamp.toSec();
         return;
     }
     // detect unstable camera stream
+    //      If difference between the the last image and the new image is >1
+    //      Or we have gone back in time 
     if (img_msg->header.stamp.toSec() - last_image_time > 1.0 || img_msg->header.stamp.toSec() < last_image_time)
     {
         ROS_WARN("image discontinue! reset the feature tracker!");
+        // Resents the node to initial config and publishes to the restart topic to tell that the node is restarted
         first_image_flag = true; 
         last_image_time = 0;
         pub_count = 1;
@@ -46,12 +53,15 @@ void img_callback(const sensor_msgs::ImageConstPtr &img_msg)
         pub_restart.publish(restart_flag);
         return;
     }
+    // If none of the above cases were true we update the last image stamp
     last_image_time = img_msg->header.stamp.toSec();
+
     // frequency control
+    // Ensures that we  maintain the max frequency limit, so we publish only if we are within the frequency tab
     if (round(1.0 * pub_count / (img_msg->header.stamp.toSec() - first_image_time)) <= FREQ)
     {
         PUB_THIS_FRAME = true;
-        // reset the frequency control
+        // reset the frequency control if we have reached the frequency limit
         if (abs(1.0 * pub_count / (img_msg->header.stamp.toSec() - first_image_time) - FREQ) < 0.01 * FREQ)
         {
             first_image_time = img_msg->header.stamp.toSec();
@@ -79,13 +89,17 @@ void img_callback(const sensor_msgs::ImageConstPtr &img_msg)
 
     cv::Mat show_img = ptr->image;
     TicToc t_r;
+    // Reading image from all cameras
     for (int i = 0; i < NUM_OF_CAM; i++)
     {
         ROS_DEBUG("processing camera %d", i);
+        // I think the image outputs from multiple cameras is stacked into a single image 
+        // which is then read by different FeatureTracker objects in the tracker data array 
         if (i != 1 || !STEREO_TRACK)
             trackerData[i].readImage(ptr->image.rowRange(ROW * i, ROW * (i + 1)), img_msg->header.stamp.toSec());
         else
         {
+            // Set this to true if the image is too dark for detecting features
             if (EQUALIZE)
             {
                 cv::Ptr<cv::CLAHE> clahe = cv::createCLAHE();
@@ -123,6 +137,7 @@ void img_callback(const sensor_msgs::ImageConstPtr &img_msg)
         feature_points->header = img_msg->header;
         feature_points->header.frame_id = "world";
 
+        // Vector with a set for each camera
         vector<set<int>> hash_ids(NUM_OF_CAM);
         for (int i = 0; i < NUM_OF_CAM; i++)
         {
@@ -210,6 +225,7 @@ int main(int argc, char **argv)
     ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Info);
     readParameters(n);
 
+    // Creating the tracker_data array of camera
     for (int i = 0; i < NUM_OF_CAM; i++)
         trackerData[i].readIntrinsicParameter(CAM_NAMES[i]);
 

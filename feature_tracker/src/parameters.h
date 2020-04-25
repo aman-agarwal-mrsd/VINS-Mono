@@ -16,7 +16,7 @@ extern int MAX_CNT;
 extern int MIN_DIST;
 extern int WINDOW_SIZE;
 extern int FREQ;
-extern double F_THRESHOLD;
+extern double F_THRESHOLD;`
 extern int SHOW_TRACK;
 extern int STEREO_TRACK;
 extern int EQUALIZE;

@@ -19,6 +19,8 @@ void reduceVector(vector<cv::Point2f> &v, vector<uchar> status)
     v.resize(j);
 }
 
+// Reduces the current vector according to the status array, we only keep elements in the vector v
+// If status is true else we remove the points and reduce the size of the vector
 void reduceVector(vector<int> &v, vector<uchar> status)
 {
     int j = 0;
@@ -213,6 +215,7 @@ bool FeatureTracker::updateID(unsigned int i)
         return false;
 }
 
+// Reads the camera calibration matrix for the respective camera from the YAML file
 void FeatureTracker::readIntrinsicParameter(const string &calib_file)
 {
     ROS_INFO("reading paramerter of camera %s", calib_file.c_str());
