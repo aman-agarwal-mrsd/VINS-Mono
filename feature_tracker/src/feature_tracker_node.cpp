@@ -29,7 +29,9 @@ bool init_pub = 0;
 
 void img_callback(const sensor_msgs::ImageConstPtr &img_msg)
 {
+
     // If this is the first image after starting the node
+    // skips first image
     if(first_image_flag)
     {
         first_image_flag = false;
@@ -38,6 +40,7 @@ void img_callback(const sensor_msgs::ImageConstPtr &img_msg)
         last_image_time = img_msg->header.stamp.toSec();
         return;
     }
+
     // detect unstable camera stream
     //      If difference between the the last image and the new image is >1
     //      Or we have gone back in time 
@@ -58,6 +61,7 @@ void img_callback(const sensor_msgs::ImageConstPtr &img_msg)
 
     // frequency control
     // Ensures that we  maintain the max frequency limit, so we publish only if we are within the frequency tab
+    // ensures #pub/s < FREQ
     if (round(1.0 * pub_count / (img_msg->header.stamp.toSec() - first_image_time)) <= FREQ)
     {
         PUB_THIS_FRAME = true;
@@ -71,6 +75,7 @@ void img_callback(const sensor_msgs::ImageConstPtr &img_msg)
     else
         PUB_THIS_FRAME = false;
 
+    // handles image message and stores information in msg, ptr
     cv_bridge::CvImageConstPtr ptr;
     if (img_msg->encoding == "8UC1")
     {
@@ -96,6 +101,9 @@ void img_callback(const sensor_msgs::ImageConstPtr &img_msg)
         // I think the image outputs from multiple cameras is stacked into a single image 
         // which is then read by different FeatureTracker objects in the tracker data array 
         if (i != 1 || !STEREO_TRACK)
+            // if not the first camera or not STEREO_TRACK (parameter is set to false in parameters.cpp)
+            // i = camera number
+            // readImage udpates forw_img, forw_pts,
             trackerData[i].readImage(ptr->image.rowRange(ROW * i, ROW * (i + 1)), img_msg->header.stamp.toSec());
         else
         {

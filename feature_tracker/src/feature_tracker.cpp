@@ -96,6 +96,7 @@ void FeatureTracker::readImage(const cv::Mat &_img, double _cur_time)
     else
         img = _img;
 
+    // if there is no forw_img (i.e. first image)
     if (forw_img.empty())
     {
         prev_img = cur_img = forw_img = img;
@@ -112,8 +113,11 @@ void FeatureTracker::readImage(const cv::Mat &_img, double _cur_time)
         TicToc t_o;
         vector<uchar> status;
         vector<float> err;
+        //computes the optical flow of the features from cur_img to forw_img
+        //forw_pts hold the output 2D point coordinates of the calculated new positions of input features in the second image
+        //status vector of length of features that holds 1 if corresponding feature found and 0 if not for every feature
         cv::calcOpticalFlowPyrLK(cur_img, forw_img, cur_pts, forw_pts, status, err, cv::Size(21, 21), 3);
-
+        
         for (int i = 0; i < int(forw_pts.size()); i++)
             if (status[i] && !inBorder(forw_pts[i]))
                 status[i] = 0;
@@ -148,6 +152,9 @@ void FeatureTracker::readImage(const cv::Mat &_img, double _cur_time)
                 cout << "mask type wrong " << endl;
             if (mask.size() != forw_img.size())
                 cout << "wrong size " << endl;
+            //detect features to be tracked in new image aka forw_img
+            //function is used to init a point-based tracker of an object
+            //n_pts holds vector of detected corner points
             cv::goodFeaturesToTrack(forw_img, n_pts, MAX_CNT - forw_pts.size(), 0.01, MIN_DIST, mask);
         }
         else
@@ -159,6 +166,7 @@ void FeatureTracker::readImage(const cv::Mat &_img, double _cur_time)
         addPoints();
         ROS_DEBUG("selectFeature costs: %fms", t_a.toc());
     }
+    //update variables from new image
     prev_img = cur_img;
     prev_pts = cur_pts;
     prev_un_pts = cur_un_pts;
@@ -190,6 +198,10 @@ void FeatureTracker::rejectWithF()
         }
 
         vector<uchar> status;
+        //determine fundamental matrix between features in first image and features in second image
+        //using RANSAC method
+        //
+        //status is a mask that holds 0 for outliers and 1 for other points
         cv::findFundamentalMat(un_cur_pts, un_forw_pts, cv::FM_RANSAC, F_THRESHOLD, 0.99, status);
         int size_a = cur_pts.size();
         reduceVector(prev_pts, status);
