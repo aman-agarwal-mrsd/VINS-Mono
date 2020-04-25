@@ -118,9 +118,11 @@ void FeatureTracker::readImage(const cv::Mat &_img, double _cur_time)
         //status vector of length of features that holds 1 if corresponding feature found and 0 if not for every feature
         cv::calcOpticalFlowPyrLK(cur_img, forw_img, cur_pts, forw_pts, status, err, cv::Size(21, 21), 3);
         
+        // Removes points for which optical flow was not there or they were outiside boundary of image
         for (int i = 0; i < int(forw_pts.size()); i++)
             if (status[i] && !inBorder(forw_pts[i]))
                 status[i] = 0;
+        // Reduces the vectors according to the status count 
         reduceVector(prev_pts, status);
         reduceVector(cur_pts, status);
         reduceVector(forw_pts, status);
@@ -163,6 +165,7 @@ void FeatureTracker::readImage(const cv::Mat &_img, double _cur_time)
 
         ROS_DEBUG("add feature begins");
         TicToc t_a;
+        // Adds the n_pts to the tracker object
         addPoints();
         ROS_DEBUG("selectFeature costs: %fms", t_a.toc());
     }
