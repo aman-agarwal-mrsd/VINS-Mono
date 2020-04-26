@@ -1,4 +1,5 @@
 #include "feature_tracker.h"
+#include "opencv2/calib3d/calib3d.hpp"
 
 int FeatureTracker::n_id = 0;
 
@@ -324,15 +325,46 @@ void FeatureTracker::undistortedPoints()
 }
 
 
-void FeatureTracker::computeDepthMap(img0,img1)
+void FeatureTracker::computeDepthMap(const sensor_msgs::ImageConstPtr &img_msg0, const sensor_msgs::ImageConstPtr &img_msg1, sensor_msgs::PointCloudPtr &feature_points)
 {
     int numDisparities=16; // this must be a multiple of 16, number of depths to calc
     int blockSize=11; // this must be an off number, the smaller it is the more detailed the disparity map but higher likelihood for wrong correspondence
+    
     Ptr<StereoBM> bm = cv::StereoBM::create(numDisparities,blockSize);
 
-    Mat disp;
+    Mat disp; //make disparity map var
 
-    bm->compute(im0,im1,disp);
+    sensor_msgs::Image img0;
+    img0.header = img_msg0->header;
+    img0.height = img_msg0->height;
+    img0.width = img_msg0->width;
+    //img0.is_bigendian = img_msg0->is_bigendian; //I don't know what this is
+    //img0.step = img_msg0->step;
+    img0.data = img_msg0->data;
+    //img0.encoding = "mono8"; //not sure if this is needed
+
+    sensor_msgs::Image img1;
+    img1.header = img_msg1->header;
+    img1.height = img_msg1->height;
+    img1.width = img_msg1->width;
+    //img0.is_bigendian = img_msg0->is_bigendian; //I don't know what this is
+    //img1.step = img_msg1->step;
+    img1.data = img_msg1->data;
+    //img0.encoding = "mono8"; //not sure if this is needed
+
+    bm->compute(img0,img1,disp); //compute disparity map
+
+
+    sensor_msgs::ChannelFloat32 depth_of_point;
+
+
+    feature_points->channels.push_back(depth_of_point);
+
+
+
+
+
+
 
 
 
