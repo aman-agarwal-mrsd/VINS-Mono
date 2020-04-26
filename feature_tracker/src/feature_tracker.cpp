@@ -322,3 +322,18 @@ void FeatureTracker::undistortedPoints()
     }
     prev_un_pts_map = cur_un_pts_map;
 }
+
+
+void FeatureTracker::computeDepthMap(img0,img1)
+{
+    int numDisparities=16; // this must be a multiple of 16, number of depths to calc
+    int blockSize=11; // this must be an off number, the smaller it is the more detailed the disparity map but higher likelihood for wrong correspondence
+    Ptr<StereoBM> bm = cv::StereoBM::create(numDisparities,blockSize);
+
+    Mat disp;
+
+    bm->compute(im0,im1,disp);
+
+
+
+}

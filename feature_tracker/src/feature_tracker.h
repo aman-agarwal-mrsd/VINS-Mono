@@ -45,6 +45,8 @@ class FeatureTracker
     void rejectWithF();
 
     void undistortedPoints();
+    
+    void computeDepthMap();
 
     cv::Mat mask;
     cv::Mat fisheye_mask;
