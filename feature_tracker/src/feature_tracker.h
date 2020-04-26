@@ -45,8 +45,8 @@ class FeatureTracker
     void rejectWithF();
 
     void undistortedPoints();
-    
-    void computeDepthMap();
+
+    void computeDepthMap(const sensor_msgs::ImageConstPtr &img_msg0, const sensor_msgs::ImageConstPtr &img_msg1, sensor_msgs::PointCloudPtr &feature_points);
 
     cv::Mat mask;
     cv::Mat fisheye_mask;
