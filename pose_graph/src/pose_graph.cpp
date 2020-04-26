@@ -44,7 +44,7 @@ void PoseGraph::addKeyFrame(KeyFrame* cur_kf, bool flag_detect_loop)
     //shift to base frame
     Vector3d vio_P_cur;
     Matrix3d vio_R_cur;
-    if (sequence_cnt != cur_kf->sequence)
+    if (sequence_cnt != cur_kf->sequence) 
     {
         sequence_cnt++;
         sequence_loop.push_back(0);

@@ -62,7 +62,7 @@ nav_msgs::Path no_loop_path;
 std::string BRIEF_PATTERN_FILE;
 std::string POSE_GRAPH_SAVE_PATH;
 std::string VINS_RESULT_PATH;
-CameraPoseVisualization cameraposevisual(1, 0, 0, 1);
+CameraPoseVisualization cameraposevisual(1, 0, 0, 1); // (r, g, b, a)
 Eigen::Vector3d last_t(-100, -100, -100);
 double last_image_time = -1;
 
@@ -95,8 +95,9 @@ void image_callback(const sensor_msgs::ImageConstPtr &image_msg)
     //ROS_INFO("image_callback!");
     if(!LOOP_CLOSURE)
         return;
+    //when a loop closure is detected do the following
     m_buf.lock();
-    image_buf.push(image_msg);
+    image_buf.push(image_msg); //push image to image buffer
     m_buf.unlock();
     //printf(" image time %f \n", image_msg->header.stamp.toSec());
 
@@ -116,8 +117,9 @@ void point_callback(const sensor_msgs::PointCloudConstPtr &point_msg)
     //ROS_INFO("point_callback!");
     if(!LOOP_CLOSURE)
         return;
+    // if a loop closure is detected 
     m_buf.lock();
-    point_buf.push(point_msg);
+    point_buf.push(point_msg); // put point message in the buffer
     m_buf.unlock();
     /*
     for (unsigned int i = 0; i < point_msg->points.size(); i++)
@@ -151,6 +153,8 @@ void pose_callback(const nav_msgs::Odometry::ConstPtr &pose_msg)
 }
 
 void imu_forward_callback(const nav_msgs::Odometry::ConstPtr &forward_msg)
+/*imu_forward_callback: stores data in  vio_t & vio_q; calculates vio_t_cam & vio_q_cam by applying extrinsics; 
+resets cameraposevisual, adds pose, and publishes*/
 {
     if (VISUALIZE_IMU_FORWARD)
     {
@@ -177,6 +181,7 @@ void imu_forward_callback(const nav_msgs::Odometry::ConstPtr &forward_msg)
         cameraposevisual.publish_by(pub_camera_pose_visual, forward_msg->header);
     }
 }
+
 void relo_relative_pose_callback(const nav_msgs::Odometry::ConstPtr &pose_msg)
 {
     Vector3d relative_t = Vector3d(pose_msg->pose.pose.position.x,
@@ -199,6 +204,8 @@ void relo_relative_pose_callback(const nav_msgs::Odometry::ConstPtr &pose_msg)
 }
 
 void vio_callback(const nav_msgs::Odometry::ConstPtr &pose_msg)
+/*vio_callback: updates cameraposevisual if VISUALIZE_IMU_FORWARD, pushes vio_t_cam into odometry_buf, 
+publishes visualization msgs, publishes key odometries from odometry_buf, publishes vio path if no loop_closure*/
 {
     //ROS_INFO("vio_callback!");
     Vector3d vio_t(pose_msg->pose.pose.position.x, pose_msg->pose.pose.position.y, pose_msg->pose.pose.position.z);
@@ -291,7 +298,7 @@ void extrinsic_callback(const nav_msgs::Odometry::ConstPtr &pose_msg)
     m_process.unlock();
 }
 
-void process()
+void process() // Threaded process, continuously running
 {
     if (!LOOP_CLOSURE)
         return;
@@ -315,22 +322,22 @@ void process()
                 point_buf.pop();
                 printf("throw point at beginning\n");
             }
-            else if (image_buf.back()->header.stamp.toSec() >= pose_buf.front()->header.stamp.toSec() 
-                && point_buf.back()->header.stamp.toSec() >= pose_buf.front()->header.stamp.toSec())
+            else if (image_buf.back()->header.stamp.toSec() >= pose_buf.front()->header.stamp.toSec() //last image time >= first pose time
+                && point_buf.back()->header.stamp.toSec() >= pose_buf.front()->header.stamp.toSec()) //last point time >= first pose time
             {
-                pose_msg = pose_buf.front();
+                pose_msg = pose_buf.front(); //take first pose message
                 pose_buf.pop();
-                while (!pose_buf.empty())
+                while (!pose_buf.empty()) //empty pose_buf
                     pose_buf.pop();
-                while (image_buf.front()->header.stamp.toSec() < pose_msg->header.stamp.toSec())
+                while (image_buf.front()->header.stamp.toSec() < pose_msg->header.stamp.toSec()) //find first image that came after pose time
                     image_buf.pop();
-                image_msg = image_buf.front();
-                image_buf.pop();
+                image_msg = image_buf.front(); // keep first image after pose_msg time
+                image_buf.pop(); // remove from buffer
 
-                while (point_buf.front()->header.stamp.toSec() < pose_msg->header.stamp.toSec())
+                while (point_buf.front()->header.stamp.toSec() < pose_msg->header.stamp.toSec()) //take first point image after pose_msg time
                     point_buf.pop();
-                point_msg = point_buf.front();
-                point_buf.pop();
+                point_msg = point_buf.front(); // keep first point msg after the kept pose_msg time
+                point_buf.pop(); //remove from buffer
             }
         }
         m_buf.unlock();
@@ -360,6 +367,7 @@ void process()
             cv_bridge::CvImageConstPtr ptr;
             if (image_msg->encoding == "8UC1")
             {
+                // handle 8UC1 encoding
                 sensor_msgs::Image img;
                 img.header = image_msg->header;
                 img.height = image_msg->height;
@@ -427,7 +435,7 @@ void process()
     }
 }
 
-void command()
+void command() // threaded process, continuous running, waiting for keyboard input command
 {
     if (!LOOP_CLOSURE)
         return;
@@ -464,6 +472,8 @@ int main(int argc, char **argv)
     n.getParam("skip_dis", SKIP_DIS);
     std::string config_file;
     n.getParam("config_file", config_file);
+
+    // fsSettings stores settings from config file
     cv::FileStorage fsSettings(config_file, cv::FileStorage::READ);
     if(!fsSettings.isOpened())
     {
@@ -478,7 +488,8 @@ int main(int argc, char **argv)
     LOOP_CLOSURE = fsSettings["loop_closure"];
     std::string IMAGE_TOPIC;
     int LOAD_PREVIOUS_POSE_GRAPH;
-    if (LOOP_CLOSURE)
+
+    if (LOOP_CLOSURE) //Loads a lot of settings... 
     {
         ROW = fsSettings["image_height"];
         COL = fsSettings["image_width"];
@@ -526,18 +537,26 @@ int main(int argc, char **argv)
 
     fsSettings.release();
 
+    //imu_forward_callback: stores data in  vio_t & vio_q; calculates vio_t_cam & vio_q_cam by applying extrinsics; resets cameraposevisual, adds pose, and publishes
     ros::Subscriber sub_imu_forward = n.subscribe("/vins_estimator/imu_propagate", 2000, imu_forward_callback);
+    //vio_callback: updates cameraposevisual if VISUALIZE_IMU_FORWARD, pushes vio_t_cam into odometry_buf, publishes visualization msgs, publishes key odometries from odometry_buf, publishes vio path if no loop_closure
     ros::Subscriber sub_vio = n.subscribe("/vins_estimator/odometry", 2000, vio_callback);
+    //image_callback: pushes data to image_buf, checks for unstable camera stream
     ros::Subscriber sub_image = n.subscribe(IMAGE_TOPIC, 2000, image_callback);
+    //pose_callback: pushes data to pose_buf
     ros::Subscriber sub_pose = n.subscribe("/vins_estimator/keyframe_pose", 2000, pose_callback);
+    //extrinsic_callback: sets tic and qic variables
     ros::Subscriber sub_extrinsic = n.subscribe("/vins_estimator/extrinsic", 2000, extrinsic_callback);
+    //point_callback: pushes data into point_buf if loop closure is detected
     ros::Subscriber sub_point = n.subscribe("/vins_estimator/keyframe_point", 2000, point_callback);
+    //relo_relative_pose_callback: updates relative_t, relative_q, and relative_yaw, uses them in posegraph.updateKeyFrameLoop
     ros::Subscriber sub_relo_relative_pose = n.subscribe("/vins_estimator/relo_relative_pose", 2000, relo_relative_pose_callback);
 
     pub_match_img = n.advertise<sensor_msgs::Image>("match_image", 1000);
     pub_camera_pose_visual = n.advertise<visualization_msgs::MarkerArray>("camera_pose_visual", 1000);
     pub_key_odometrys = n.advertise<visualization_msgs::Marker>("key_odometrys", 1000);
     pub_vio_path = n.advertise<nav_msgs::Path>("no_loop_path", 1000);
+    //goes to estimator as relocation
     pub_match_points = n.advertise<sensor_msgs::PointCloud>("match_points", 100);
 
     std::thread measurement_process;
