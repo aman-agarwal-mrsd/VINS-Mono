@@ -277,6 +277,7 @@ void process()
                     //printf("dimu: dt:%f a: %f %f %f w: %f %f %f\n",dt_1, dx, dy, dz, rx, ry, rz);
                 }
             }
+            
             // set relocalization frame (from Pose Graph)
             sensor_msgs::PointCloudConstPtr relo_msg = NULL;
             while (!relo_buf.empty())
