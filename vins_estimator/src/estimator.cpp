@@ -177,7 +177,7 @@ void Estimator::processImage(const map<int, vector<pair<int, Eigen::Matrix<doubl
                 slideWindow();
                 f_manager.removeFailures();
                 ROS_INFO("Initialization finish!");
-                last_R = Rs[WINDOW_SIZE];
+                last_R = Rs[WINDOW_SIZE]; 
                 last_P = Ps[WINDOW_SIZE];
                 last_R0 = Rs[0];
                 last_P0 = Ps[0];
@@ -192,7 +192,7 @@ void Estimator::processImage(const map<int, vector<pair<int, Eigen::Matrix<doubl
     else
     {
         TicToc t_solve;
-        solveOdometry();
+        solveOdometry(); // this function calls triangulate
         ROS_DEBUG("solver costs: %fms", t_solve.toc());
 
         if (failureDetection())
