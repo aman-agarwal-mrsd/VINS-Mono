@@ -322,22 +322,22 @@ void process() // Threaded process, continuously running
                 point_buf.pop();
                 printf("throw point at beginning\n");
             }
-            else if (image_buf.back()->header.stamp.toSec() >= pose_buf.front()->header.stamp.toSec() 
-                && point_buf.back()->header.stamp.toSec() >= pose_buf.front()->header.stamp.toSec())
+            else if (image_buf.back()->header.stamp.toSec() >= pose_buf.front()->header.stamp.toSec() //last image time >= first pose time
+                && point_buf.back()->header.stamp.toSec() >= pose_buf.front()->header.stamp.toSec()) //last point time >= first pose time
             {
-                pose_msg = pose_buf.front();
+                pose_msg = pose_buf.front(); //take first pose message
                 pose_buf.pop();
-                while (!pose_buf.empty())
+                while (!pose_buf.empty()) //empty pose_buf
                     pose_buf.pop();
-                while (image_buf.front()->header.stamp.toSec() < pose_msg->header.stamp.toSec())
+                while (image_buf.front()->header.stamp.toSec() < pose_msg->header.stamp.toSec()) //find first image that came after pose time
                     image_buf.pop();
-                image_msg = image_buf.front();
-                image_buf.pop();
+                image_msg = image_buf.front(); // keep first image after pose_msg time
+                image_buf.pop(); // remove from buffer
 
-                while (point_buf.front()->header.stamp.toSec() < pose_msg->header.stamp.toSec())
+                while (point_buf.front()->header.stamp.toSec() < pose_msg->header.stamp.toSec()) //take first point image after pose_msg time
                     point_buf.pop();
-                point_msg = point_buf.front();
-                point_buf.pop();
+                point_msg = point_buf.front(); // keep first point msg after the kept pose_msg time
+                point_buf.pop(); //remove from buffer
             }
         }
         m_buf.unlock();
@@ -367,6 +367,7 @@ void process() // Threaded process, continuously running
             cv_bridge::CvImageConstPtr ptr;
             if (image_msg->encoding == "8UC1")
             {
+                // handle 8UC1 encoding
                 sensor_msgs::Image img;
                 img.header = image_msg->header;
                 img.height = image_msg->height;
