@@ -13,7 +13,11 @@
 
 vector<uchar> r_status;
 vector<float> r_err;
-queue<sensor_msgs::ImageConstPtr> img_buf;
+// queue<sensor_msgs::ImageConstPtr> img_buf;
+// queue<sensor_msgs::ImageConstPtr> img1_buf;
+sensor_msgs::ImageConstPtr img0, img1;
+sensor_msgs::PointCloudPtr fp;
+
 
 // Publishers for the 3 topics the node publishes to
 ros::Publisher pub_img,pub_match;
@@ -178,6 +182,7 @@ void img_callback(const sensor_msgs::ImageConstPtr &img_msg)
         feature_points->channels.push_back(v_of_point);
         feature_points->channels.push_back(velocity_x_of_point);
         feature_points->channels.push_back(velocity_y_of_point);
+        fp = feature_points;
         ROS_DEBUG("publish %f, at %f", feature_points->header.stamp.toSec(), ros::Time::now().toSec());
         // skip the first image; since no optical speed on frist image
         if (!init_pub)
@@ -224,6 +229,13 @@ void img_callback(const sensor_msgs::ImageConstPtr &img_msg)
         }
     }
     ROS_INFO("whole feature tracker processing costs: %f", t_r.toc());
+    img0 = img_msg;
+    trackerData[0].computeDepthMap(img0, img1, fp);
+}
+
+void stereo_callback(const sensor_msgs::ImageConstPtr &img_msg)
+{
+    img1 = img_msg;
 }
 
 int main(int argc, char **argv)
@@ -253,6 +265,7 @@ int main(int argc, char **argv)
     }
 
     ros::Subscriber sub_img = n.subscribe(IMAGE_TOPIC, 100, img_callback);
+    ros::Subscriber sub_img1 = n.subscribe("/cam1/image_raw", 100, stereo_callback);
 
     pub_img = n.advertise<sensor_msgs::PointCloud>("feature", 1000);
     pub_match = n.advertise<sensor_msgs::Image>("feature_img",1000);

@@ -2,6 +2,7 @@
 #include "opencv2/calib3d/calib3d.hpp"
 #include "opencv2/core/mat.hpp"
 
+
 int FeatureTracker::n_id = 0;
 
 bool inBorder(const cv::Point2f &pt)
@@ -328,6 +329,7 @@ void FeatureTracker::undistortedPoints()
 
 void FeatureTracker::computeDepthMap(const sensor_msgs::ImageConstPtr &img_msg0, const sensor_msgs::ImageConstPtr &img_msg1, sensor_msgs::PointCloudPtr &feature_points)
 {
+    ROS_INFO("Computing Depth Map");
     int numDisparities=16; // this must be a multiple of 16, number of depths to calc
     int blockSize=11; // this must be an off number, the smaller it is the more detailed the disparity map but higher likelihood for wrong correspondence
     

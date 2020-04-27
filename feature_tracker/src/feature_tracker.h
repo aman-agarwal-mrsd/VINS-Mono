@@ -16,6 +16,10 @@
 #include "parameters.h"
 #include "tic_toc.h"
 
+#include <ros/ros.h>
+#include <sensor_msgs/PointCloud.h>
+#include <sensor_msgs/Image.h>
+
 using namespace std;
 using namespace camodocal;
 using namespace Eigen;
