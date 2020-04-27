@@ -2,6 +2,16 @@
 #include "opencv2/calib3d/calib3d.hpp"
 #include "opencv2/core/mat.hpp"
 
+#include "opencv2/imgproc.hpp"
+#include "opencv2/imgcodecs.hpp"
+#include "opencv2/highgui.hpp"
+#include "opencv2/core/utility.hpp"
+
+#include <sensor_msgs/Image.h>
+#include <sensor_msgs/image_encodings.h>
+#include <sensor_msgs/PointCloud.h>
+#include <sensor_msgs/Imu.h>
+
 int FeatureTracker::n_id = 0;
 
 bool inBorder(const cv::Point2f &pt)
@@ -331,7 +341,7 @@ void FeatureTracker::computeDepthMap(const sensor_msgs::ImageConstPtr &img_msg0,
     int numDisparities=16; // this must be a multiple of 16, number of depths to calc
     int blockSize=11; // this must be an off number, the smaller it is the more detailed the disparity map but higher likelihood for wrong correspondence
     
-    Ptr<StereoBM> bm = cv::StereoBM::create(numDisparities,blockSize);
+    cv::Ptr<cv::StereoBM> bm = cv::StereoBM::create(numDisparities,blockSize);
 
     cv::Mat disp; //make disparity map var
 
@@ -353,21 +363,23 @@ void FeatureTracker::computeDepthMap(const sensor_msgs::ImageConstPtr &img_msg0,
     img1.data = img_msg1->data;
     //img0.encoding = "mono8"; //not sure if this is needed
 
+    bm->setSpeckleRange(32);
+
     bm->compute(img0,img1,disp); //compute disparity map
 
 
     sensor_msgs::ChannelFloat32 depth_of_points;
     
-    for (unsigned int j = 0; j<feature_points.points.size(); j++)
+    for (unsigned int j = 0; j<feature_points->points.size(); j++)
     {
         int x = feature_points->points[j].x;
         int y = feature_points->points[j].y;
         
-        float depth = disp[x,y];
+        float depth = disp(x,y);
 
         depth_of_points.values.push_back(depth);
     }
 
-    feature_points->channels.push_back(depth_of_point);
+    feature_points->channels.push_back(depth_of_points);
 
 }
