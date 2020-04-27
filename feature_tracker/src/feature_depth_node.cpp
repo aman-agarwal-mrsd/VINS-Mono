@@ -301,10 +301,14 @@ void depth_estimator()
         //          });
         // lk.unlock();
         // m_estimator.lock();
+        ROS_INFO("Depth Estimator");
         std::vector<pcl_images_map> measurements = getMeasurements();
         // Returns if measurements was empty
         if (measurements.empty())
+        {
+            ROS_INFO("measurement empty");
             return;
+        }
         // Measurements was not empty
         for (auto &measurement : measurements)
         {

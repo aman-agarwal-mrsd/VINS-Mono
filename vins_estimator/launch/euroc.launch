@@ -7,7 +7,7 @@
         <param name="vins_folder" type="string" value="$(arg vins_path)" />
     </node>
 
-    <node name="feature_depth" pkg="feature_tracker" type="feature_depth" output="log">
+    <node name="feature_depth" pkg="feature_tracker" type="feature_depth" output="screen">
     </node>
 
 
