@@ -16,6 +16,11 @@
 #include "parameters.h"
 #include "tic_toc.h"
 
+#include <sensor_msgs/Image.h>
+#include <sensor_msgs/image_encodings.h>
+#include <sensor_msgs/PointCloud.h>
+#include <sensor_msgs/Imu.h>
+
 using namespace std;
 using namespace camodocal;
 using namespace Eigen;
