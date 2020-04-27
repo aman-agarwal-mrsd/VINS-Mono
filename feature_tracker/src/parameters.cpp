@@ -61,7 +61,7 @@ void readParameters(ros::NodeHandle &n)
     CAM_NAMES.push_back(config_file);
 
     WINDOW_SIZE = 20;
-    STEREO_TRACK = true;
+    STEREO_TRACK = false;
     FOCAL_LENGTH = 460;
     PUB_THIS_FRAME = false;
 

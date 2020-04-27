@@ -141,6 +141,7 @@ void img_callback(const sensor_msgs::ImageConstPtr &img_msg)
         sensor_msgs::ChannelFloat32 v_of_point;
         sensor_msgs::ChannelFloat32 velocity_x_of_point;
         sensor_msgs::ChannelFloat32 velocity_y_of_point;
+        sensor_msgs::ChannelFloat32 depth_of_point;
 
         feature_points->header = img_msg->header;
         feature_points->header.frame_id = "world";
@@ -170,6 +171,7 @@ void img_callback(const sensor_msgs::ImageConstPtr &img_msg)
                     v_of_point.values.push_back(cur_pts[j].y);
                     velocity_x_of_point.values.push_back(pts_velocity[j].x);
                     velocity_y_of_point.values.push_back(pts_velocity[j].y);
+                    depth_of_point.values.push_back(0.0);
                 }
             }
         }
@@ -178,6 +180,7 @@ void img_callback(const sensor_msgs::ImageConstPtr &img_msg)
         feature_points->channels.push_back(v_of_point);
         feature_points->channels.push_back(velocity_x_of_point);
         feature_points->channels.push_back(velocity_y_of_point);
+        feature_points->channels.push_back(depth_of_point);
         ROS_DEBUG("publish %f, at %f", feature_points->header.stamp.toSec(), ros::Time::now().toSec());
         // skip the first image; since no optical speed on frist image
         if (!init_pub)
