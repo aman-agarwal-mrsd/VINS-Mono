@@ -1,5 +1,6 @@
 #include "feature_tracker.h"
 #include "opencv2/calib3d/calib3d.hpp"
+#include "opencv2/core/mat.hpp"
 
 int FeatureTracker::n_id = 0;
 
@@ -332,7 +333,7 @@ void FeatureTracker::computeDepthMap(const sensor_msgs::ImageConstPtr &img_msg0,
     
     Ptr<StereoBM> bm = cv::StereoBM::create(numDisparities,blockSize);
 
-    Mat disp; //make disparity map var
+    cv::Mat disp; //make disparity map var
 
     sensor_msgs::Image img0;
     img0.header = img_msg0->header;
@@ -355,17 +356,18 @@ void FeatureTracker::computeDepthMap(const sensor_msgs::ImageConstPtr &img_msg0,
     bm->compute(img0,img1,disp); //compute disparity map
 
 
-    sensor_msgs::ChannelFloat32 depth_of_point;
+    sensor_msgs::ChannelFloat32 depth_of_points;
+    
+    for (unsigned int j = 0; j<feature_points.points.size(); j++)
+    {
+        int x = feature_points->points[j].x;
+        int y = feature_points->points[j].y;
+        
+        float depth = disp[x,y];
 
+        depth_of_points.values.push_back(depth);
+    }
 
     feature_points->channels.push_back(depth_of_point);
-
-
-
-
-
-
-
-
 
 }
