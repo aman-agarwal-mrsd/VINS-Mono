@@ -41,6 +41,8 @@ std::mutex m_estimator;
 
 FeatureTracker ftracker;
 
+ros::Publisher pub_feature_depth;
+
 
 // Eigen::Vector3d tmp_P;
 // Eigen::Quaterniond tmp_Q;
@@ -212,7 +214,7 @@ int main(int argc, char **argv)
 
     // registerPub(n);
 
-    pub_feature_depth = n.advertise<sensor_msgs::PointCloud>("/feature_tracker/feature_with_depth", 1000);
+    pub_feature_depth = nh.advertise<sensor_msgs::PointCloud>("/feature_tracker/feature_with_depth", 1000);
 
 
     ros::Subscriber sub_img0 = nh.subscribe("/cam0/image_raw", 100, img0_callback);
