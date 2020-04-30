@@ -364,7 +364,7 @@ void FeatureTracker::computeDepthMap(const sensor_msgs::ImageConstPtr &img_msg0,
     img1.data = img_msg1->data;
     //img0.encoding = "mono8"; //not sure if this is needed
 
-    bm->setSpeckleRange(32);
+    //bm->setSpeckleRange(32);
 
     bm->compute(img0.data,img1.data,disp); //compute disparity map
 
@@ -376,12 +376,11 @@ void FeatureTracker::computeDepthMap(const sensor_msgs::ImageConstPtr &img_msg0,
         int x = feature_points->points[j].x;
         int y = feature_points->points[j].y;
         
-        // float depth = disp[x][y];
-        double depth = disp.at<double>(x,y);
+        float depth = disp.at<double>(x,y);
 
         depth_of_points.values.push_back(depth);
     }
 
-    feature_points->channels.push_back(depth_of_points);
+    feature_points->channels.push_back(depth_of_points); //this is index 5 i think
 
 }
