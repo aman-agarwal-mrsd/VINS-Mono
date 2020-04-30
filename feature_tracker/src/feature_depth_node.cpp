@@ -100,7 +100,6 @@ std::vector<pcl_images_map> getMeasurements()
                 // pcl_images_map m(feature_buf.front(),img0_buf.front(), img1_buf.front());
                 // ROS_INFO("Pushing into measurements");
                 measurements.emplace_back(feature_buf.front(),img0_buf.front(), img1_buf.front());
-                // ROS_INFO("Pushed to measurement");
                 feature_buf.pop();
                 img0_buf.pop();
                 img1_buf.pop();
@@ -154,12 +153,12 @@ void depth_estimator()
             return;
         }
         int m_size = measurements.size();
-        ROS_INFO("Measurement size: %d", m_size);
+        // ROS_INFO("Measurement size: %d", m_size);
         // Measurements was not emptyNFO
         for (auto &measurement : measurements)
         {
-            ROS_INFO(" Data type: %s", typeid(measurement).name());
-            ROS_INFO("INSIDE FOR LOOP");
+            // ROS_INFO(" Data type: %s", typeid(measurement).name());
+            // ROS_INFO("INSIDE FOR LOOP");
             // auto img0_msg = measurement.img0_msg; // point cloud measurements
             // auto img1_msg = measurement.img1_msg; // point cloud measurements
             // auto feature_msg = measurement.feature_msg; // point cloud measurements
