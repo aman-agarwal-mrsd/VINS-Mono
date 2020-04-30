@@ -115,13 +115,6 @@ std::vector<pcl_images_map> getMeasurements()
     return measurements;
 }
 
-
-
-
-
-
-
-
 // thread: Depth Estimation
 void depth_estimator()
 {
@@ -129,16 +122,6 @@ void depth_estimator()
     // return;
     while (true)
     {
-        // std::vector<pcl_images_map> measurements;
-        // std::unique_lock<std::mutex> lk(m_buf);
-        // con.wait(lk, [&]
-        //          {
-        //              // Populate measurements with vector of imu readings and vector of point clouds
-        //     return (measurements = getMeasurements()).size() != 0;
-        //          });
-        // lk.unlock();
-        // m_estimator.lock();
-        // ROS_INFO("Depth Estimator");
         i0_buf.lock();
         i1_buf.lock();
         f_buf.lock();
