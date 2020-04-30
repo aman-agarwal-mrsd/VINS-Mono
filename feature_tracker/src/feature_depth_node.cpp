@@ -31,7 +31,7 @@ std::mutex f_buf;
 std::mutex i0_buf;
 std::mutex i1_buf;
 double latest_time = 0;
-int max_queue_size = 100;
+unsigned int max_queue_size = 100;
 int sum_of_wait = 0;
 std::mutex i_buf;
 
@@ -58,10 +58,10 @@ struct pcl_images_map
     sensor_msgs::ImageConstPtr img0_msg;
     sensor_msgs::ImageConstPtr img1_msg;
 
-    pcl_images_map(const sensor_msgs::PointCloudConstPtr &_feature_msg,
-    const sensor_msgs::ImageConstPtr &_img0_msg,
-    const sensor_msgs::ImageConstPtr &_img1_msg
-    ): feature_msg(_feature_msg), img0_msg(_img0_msg), img1_msg(img1_msg){}
+    pcl_images_map(sensor_msgs::PointCloudConstPtr _feature_msg,
+    sensor_msgs::ImageConstPtr _img0_msg,
+    sensor_msgs::ImageConstPtr _img1_msg
+    ): feature_msg(_feature_msg), img0_msg(_img0_msg), img1_msg(_img1_msg){}
 };
 typedef struct pcl_images_map pcl_images_map;
 
@@ -96,10 +96,11 @@ std::vector<pcl_images_map> getMeasurements()
             // Right Camera image is newer than or equal to PCL 
             if (feature_buf.front()->header.stamp.toSec() <= img1_buf.front()->header.stamp.toSec())
             {
-                ROS_INFO("Pushing to measurement");
-                pcl_images_map m(feature_buf.front(),img0_buf.front(), img1_buf.front());
-                measurements.emplace_back(m);
-                ROS_INFO("Pushed to measurement");
+                // ROS_INFO("Creating Struct");
+                // pcl_images_map m(feature_buf.front(),img0_buf.front(), img1_buf.front());
+                // ROS_INFO("Pushing into measurements");
+                measurements.emplace_back(feature_buf.front(),img0_buf.front(), img1_buf.front());
+                // ROS_INFO("Pushed to measurement");
                 feature_buf.pop();
                 img0_buf.pop();
                 img1_buf.pop();
@@ -139,7 +140,13 @@ void depth_estimator()
         // lk.unlock();
         // m_estimator.lock();
         // ROS_INFO("Depth Estimator");
+        i0_buf.lock();
+        i1_buf.lock();
+        f_buf.lock();
         std::vector<pcl_images_map> measurements = getMeasurements();
+        i0_buf.unlock();
+        i1_buf.unlock();
+        f_buf.unlock();
         // Returns if measurements was empty
         if (measurements.empty())
         {
