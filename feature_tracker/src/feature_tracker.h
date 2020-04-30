@@ -51,7 +51,7 @@ class FeatureTracker
 
     void undistortedPoints();
 
-    sensor_msgs::PointCloud computeDepthMap(const sensor_msgs::ImageConstPtr &img_msg0, const sensor_msgs::ImageConstPtr &img_msg1, sensor_msgs::PointCloudPtr &feature_points);
+    sensor_msgs::PointCloud computeDepthMap(const sensor_msgs::ImageConstPtr &img_msg0, const sensor_msgs::ImageConstPtr &img_msg1, const sensor_msgs::PointCloudConstPtr &feature_points);
 
     cv::Mat mask;
     cv::Mat fisheye_mask;

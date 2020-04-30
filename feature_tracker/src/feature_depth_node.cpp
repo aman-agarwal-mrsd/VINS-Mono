@@ -152,7 +152,7 @@ void depth_estimator()
             ROS_INFO("Left Image Time: %f", measurement.img0_msg->header.stamp.toSec());
             ROS_INFO("Right Image Time: %f", measurement.img1_msg->header.stamp.toSec());
             ROS_INFO("Feature Time: %f", measurement.feature_msg->header.stamp.toSec());
-            sensor_msgs::PointCloud feature_points_depth = ftracker.computeDepthMap(measurement.img0_msg, measurement.img1_msg, measurement.feature_msg)
+            sensor_msgs::PointCloud feature_points_depth = ftracker.computeDepthMap(measurement.img0_msg, measurement.img1_msg, measurement.feature_msg);
             // cout<< "Left Image Time: "<<img0_msg->header.stamp.toSec()<< " Right Image Time: "<<img1_msg->header.stamp.toSec()<<
             // "Feature Time: "<<feature_msg->header.stamp.toSec()<<endl;
             pub_feature_depth.publish(feature_points_depth);
