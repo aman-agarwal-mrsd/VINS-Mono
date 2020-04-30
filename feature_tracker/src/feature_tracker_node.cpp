@@ -183,7 +183,6 @@ void img_callback(const sensor_msgs::ImageConstPtr &img_msg)
         feature_points->channels.push_back(v_of_point);
         feature_points->channels.push_back(velocity_x_of_point);
         feature_points->channels.push_back(velocity_y_of_point);
-        fp = feature_points;
         ROS_DEBUG("publish %f, at %f", feature_points->header.stamp.toSec(), ros::Time::now().toSec());
         // skip the first image; since no optical speed on frist image
         if (!init_pub)
@@ -230,7 +229,6 @@ void img_callback(const sensor_msgs::ImageConstPtr &img_msg)
         }
     }
     ROS_INFO("whole feature tracker processing costs: %f", t_r.toc());
-    img0 = img_msg;
 }
 
 int main(int argc, char **argv)

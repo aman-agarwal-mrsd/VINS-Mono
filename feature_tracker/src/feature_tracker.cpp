@@ -336,7 +336,7 @@ void FeatureTracker::undistortedPoints()
 }
 
 
-void FeatureTracker::computeDepthMap(const sensor_msgs::ImageConstPtr &img_msg0, const sensor_msgs::ImageConstPtr &img_msg1, sensor_msgs::PointCloudPtr &feature_points)
+sensor_msgs::PointCloud FeatureTracker::computeDepthMap(const sensor_msgs::ImageConstPtr &img_msg0, const sensor_msgs::ImageConstPtr &img_msg1, sensor_msgs::PointCloudPtr &feature_points)
 {
     ROS_INFO("Computing Depth Map");
     int numDisparities=16; // this must be a multiple of 16, number of depths to calc
@@ -370,6 +370,14 @@ void FeatureTracker::computeDepthMap(const sensor_msgs::ImageConstPtr &img_msg0,
 
 
     sensor_msgs::ChannelFloat32 depth_of_points;
+
+    //copy feature points
+    sensor_msgs::PointCloud feature_points_depth;
+    feature_points_depth.channels = feature_points->channels;
+    feature_points_depth.header = feature_points->header;
+    feature_points_depth.points = feature_points->points;
+
+
     
     for (unsigned int j = 0; j<feature_points->points.size(); j++)
     {
@@ -381,6 +389,8 @@ void FeatureTracker::computeDepthMap(const sensor_msgs::ImageConstPtr &img_msg0,
         depth_of_points.values.push_back(depth);
     }
 
-    feature_points->channels.push_back(depth_of_points); //this is index 5 i think
+    feature_points_depth.channels.push_back(depth_of_points); //this is index 5 i think
+
+    return feature_points_depth;
 
 }
