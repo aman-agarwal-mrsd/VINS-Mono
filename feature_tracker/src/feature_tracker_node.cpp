@@ -230,14 +230,14 @@ void img_callback(const sensor_msgs::ImageConstPtr &img_msg)
         }
     }
     ROS_INFO("whole feature tracker processing costs: %f", t_r.toc());
-    img0 = img_msg;
-    trackerData[0].computeDepthMap(img0, img1, fp);
+    //img0 = img_msg;
+    //trackerData[0].computeDepthMap(img0, img1, fp);
 }
 
-void stereo_callback(const sensor_msgs::ImageConstPtr &img_msg)
-{
-    img1 = img_msg;
-}
+//void stereo_callback(const sensor_msgs::ImageConstPtr &img_msg)
+//{
+//    img1 = img_msg;
+//}
 
 int main(int argc, char **argv)
 {
