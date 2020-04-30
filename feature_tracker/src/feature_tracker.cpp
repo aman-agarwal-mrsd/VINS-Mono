@@ -336,7 +336,7 @@ void FeatureTracker::undistortedPoints()
 }
 
 
-sensor_msgs::PointCloud FeatureTracker::computeDepthMap(const sensor_msgs::ImageConstPtr &img_msg0, const sensor_msgs::ImageConstPtr &img_msg1, sensor_msgs::PointCloudPtr &feature_points)
+sensor_msgs::PointCloud FeatureTracker::computeDepthMap(const sensor_msgs::ImageConstPtr &img_msg0, const sensor_msgs::ImageConstPtr &img_msg1, const sensor_msgs::PointCloudConstPtr &feature_points)
 {
     ROS_INFO("Computing Depth Map");
     int numDisparities=16; // this must be a multiple of 16, number of depths to calc
