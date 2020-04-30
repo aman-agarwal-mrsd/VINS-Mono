@@ -12,7 +12,7 @@
 // #include <sensor_msgs/image_encodings.h>
 #include <sensor_msgs/PointCloud.h>
 // #include <sensor_msgs/Imu.h>
-// #include "feature_tracker.h"
+#include "feature_tracker.h"
 // #include "estimator.h"
 // #include "parameters.h"
 // #include "utility/visualization.h"
@@ -38,6 +38,8 @@ std::mutex i_buf;
 std::mutex m_state;
 
 std::mutex m_estimator;
+
+FeatureTracker ftracker;
 
 
 // Eigen::Vector3d tmp_P;
@@ -148,8 +150,10 @@ void depth_estimator()
             ROS_INFO("Left Image Time: %f", measurement.img0_msg->header.stamp.toSec());
             ROS_INFO("Right Image Time: %f", measurement.img1_msg->header.stamp.toSec());
             ROS_INFO("Feature Time: %f", measurement.feature_msg->header.stamp.toSec());
+            sensor_msgs::PointCloud feature_points_depth = ftracker.computeDepthMap(measurement.img0_msg, measurement.img1_msg, measurement.feature_msg)
             // cout<< "Left Image Time: "<<img0_msg->header.stamp.toSec()<< " Right Image Time: "<<img1_msg->header.stamp.toSec()<<
             // "Feature Time: "<<feature_msg->header.stamp.toSec()<<endl;
+            pub_feature_depth.publish(feature_points_depth);
         }
     }
 }
@@ -207,6 +211,8 @@ int main(int argc, char **argv)
     // estimator.setParameter();
 
     // registerPub(n);
+
+    pub_feature_depth = n.advertise<sensor_msgs::PointCloud>("/feature_tracker/feature_with_depth", 1000);
 
 
     ros::Subscriber sub_img0 = nh.subscribe("/cam0/image_raw", 100, img0_callback);
