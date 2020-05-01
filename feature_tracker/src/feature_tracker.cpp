@@ -49,7 +49,7 @@ FeatureTracker::FeatureTracker()
 
 void FeatureTracker::setMask()
 {
-    if(FISHEYE)
+    if(FISHEYE) // Euroc config not using fisheye
         mask = fisheye_mask.clone();
     else
         mask = cv::Mat(ROW, COL, CV_8UC1, cv::Scalar(255));
@@ -422,4 +422,27 @@ sensor_msgs::PointCloud FeatureTracker::computeDepthMap(const sensor_msgs::Image
 
     return feature_points_depth;
 
+}
+
+sensor_msgs::ChannelFloat32 FeatureTracker::computeDepthMap2(const cv::Mat &_img0, const cv::Mat &_img1, const vector<cv::Point2f> &feature_points)
+{
+    ROS_INFO("Computing Depth Map");
+
+    cv::Mat img0, img1;
+    if (EQUALIZE)
+    {
+        cv::Ptr<cv::CLAHE> clahe = cv::createCLAHE(3.0, cv::Size(8, 8));
+        TicToc t_c;
+        clahe->apply(_img0, img0);
+        clahe->apply(_img1, img1);
+        ROS_DEBUG("CLAHE costs: %fms", t_c.toc());
+    }
+    else
+        img0 = _img0;
+        img1 = _img1;
+    
+    sensor_msgs::ChannelFloat32 depth_of_point;
+    depth_of_point.name = "Depth";
+    
+    return depth_of_point;
 }

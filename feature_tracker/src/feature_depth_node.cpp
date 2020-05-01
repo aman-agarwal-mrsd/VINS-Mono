@@ -5,17 +5,15 @@
 #include <mutex>
 #include <condition_variable>
 #include <ros/ros.h>
-// #include <cv_bridge/cv_bridge.h>
-// #include <opencv2/opencv.hpp>
-// #include <ros/ros.h>
+
+#include <cv_bridge/cv_bridge.h>
+#include <opencv2/core/types.hpp>
+#include "opencv2/core/utility.hpp"
+
 #include <sensor_msgs/Image.h>
-// #include <sensor_msgs/image_encodings.h>
 #include <sensor_msgs/PointCloud.h>
-// #include <sensor_msgs/Imu.h>
 #include "feature_tracker.h"
-// #include "estimator.h"
-// #include "parameters.h"
-// #include "utility/visualization.h"
+#include "parameters.h"
 
 //Initialize main estimator object
 // Estimator estimator;
@@ -140,7 +138,7 @@ void depth_estimator()
             // ROS_INFO("measurement empty");
             return;
         }
-        int m_size = measurements.size();
+        // int m_size = measurements.size();
         // ROS_INFO("Measurement size: %d", m_size);
         // Measurements was not emptyNFO
         for (auto &measurement : measurements)
@@ -153,9 +151,30 @@ void depth_estimator()
             ROS_INFO("Left Image Time: %f", measurement.img0_msg->header.stamp.toSec());
             ROS_INFO("Right Image Time: %f", measurement.img1_msg->header.stamp.toSec());
             ROS_INFO("Feature Time: %f", measurement.feature_msg->header.stamp.toSec());
-            sensor_msgs::PointCloud feature_points_depth = ftracker.computeDepthMap(measurement.img0_msg, measurement.img1_msg, measurement.feature_msg);
-            // cout<< "Left Image Time: "<<img0_msg->header.stamp.toSec()<< " Right Image Time: "<<img1_msg->header.stamp.toSec()<<
-            // "Feature Time: "<<feature_msg->header.stamp.toSec()<<endl;
+            // sensor_msgs::PointCloud feature_points_depth = ftracker.computeDepthMap(measurement.img0_msg, measurement.img1_msg, measurement.feature_msg);
+
+            //Handles message data before passing to feature depth node
+            //Euroc images are already in mono8 encoding
+            cv_bridge::CvImageConstPtr img0_ptr, img1_ptr;
+            img0_ptr = cv_bridge::toCvCopy(measurement.img0_msg, sensor_msgs::image_encodings::MONO8);
+            img1_ptr = cv_bridge::toCvCopy(measurement.img1_msg, sensor_msgs::image_encodings::MONO8);
+            vector<cv::Point2f> features;
+            for (unsigned int i = 0; i < measurement.feature_msg->points.size(); i++)
+            {
+                cv::Point2f point(measurement.feature_msg->points[i].x,measurement.feature_msg->points[i].y);
+                // point.x = measurement.feature_msg->points[i].x;
+                // point.y = measurement.feature_msg->points[i].y;
+                features.push_back(point);
+            }
+            sensor_msgs::ChannelFloat32 depth_channel = ftracker.computeDepthMap2(img0_ptr->image, img1_ptr->image, features);
+
+            //Publish:
+            sensor_msgs::PointCloudPtr feature_points_depth(new sensor_msgs::PointCloud);
+            feature_points_depth->header = measurement.feature_msg->header;
+            feature_points_depth->points = measurement.feature_msg->points;
+            feature_points_depth->channels = measurement.feature_msg->channels;
+            feature_points_depth->channels.push_back(depth_channel);
+
             pub_feature_depth.publish(feature_points_depth);
         }
     }

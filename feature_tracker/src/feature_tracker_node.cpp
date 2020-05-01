@@ -81,7 +81,7 @@ void img_callback(const sensor_msgs::ImageConstPtr &img_msg)
 
     // handles image message and stores information in msg, ptr
     cv_bridge::CvImageConstPtr ptr;
-    if (img_msg->encoding == "8UC1")
+    if (img_msg->encoding == "8UC1") // Euroc: is mono8
     {
         sensor_msgs::Image img;
         img.header = img_msg->header;
