@@ -8,8 +8,6 @@
 
 using namespace std;
 
-
-
 sensor_msgs::PointCloud FeatureTracker::computeDepthMap(const sensor_msgs::ImageConstPtr &img_msg0, const sensor_msgs::ImageConstPtr &img_msg1, const sensor_msgs::PointCloudConstPtr &feature_points)
 {
 
