@@ -370,15 +370,15 @@ sensor_msgs::PointCloud FeatureTracker::computeDepthMap(const sensor_msgs::Image
     //img0.encoding = "mono8"; //not sure if this is needed
     
     //detect features in image 1
-    vector<cv::Point2f> im1_pts;// I think this needs to be of type vector<KeyPoint>
-    setMask();
-    cv::goodFeaturesToTrack(forw_img, im1_pts, feature_points->points.size(), 0.01, MIN_DIST, mask);
+    // vector<cv::Point2f> im1_pts;// I think this needs to be of type vector<KeyPoint>
+    // setMask();
+    // cv::goodFeaturesToTrack(forw_img, im1_pts, feature_points->points.size(), 0.01, MIN_DIST, mask);
 
 
-    // //bm->setSpeckleRange(32);
-    // ROS_INFO("Compute disparity");
-    // bm->compute(img0.data,img1.data,disp); //compute disparity map
-    // ROS_INFO("disparity computed");
+    //bm->setSpeckleRange(32);
+    ROS_INFO("Compute disparity");
+    bm->compute(img0.data,img1.data,disp); //compute disparity map
+    ROS_INFO("disparity computed");
 
 
     sensor_msgs::ChannelFloat32 depth_of_points;
@@ -391,19 +391,19 @@ sensor_msgs::PointCloud FeatureTracker::computeDepthMap(const sensor_msgs::Image
     feature_points_depth.points = feature_points->points;
 
     //run BRIEF descriptor on Image 1
-    cv::Mat desc_img1;
-    Ptr<BriefDescriptorExtractor> brief_img1 =  cv::xfeatures2d::BriefDescriptorExtractor::create(64); //i don't know what 64 means - it was in the example
-    brief_img1->compute(img1.data, im1_pts, desc_img1);
+    // cv::Mat desc_img1;
+    // Ptr<BriefDescriptorExtractor> brief_img1 =  cv::xfeatures2d::BriefDescriptorExtractor::create(64); //i don't know what 64 means - it was in the example
+    // brief_img1->compute(img1.data, im1_pts, desc_img1);
 
     //run BRIEF descriptor on Image 0
-    cv::Mat desc_img0;
-    Ptr<BriefDescriptorExtractor> brief_img0 =  cv::xfeatures2d::BriefDescriptorExtractor::create(64); //i don't know what 64 means - it was in the example
-    brief_img0->compute(img0.data, feature_points_depth.points, desc_img0); //feature_points_depth.points might need to be of type vector<KeyPoint>
+    // cv::Mat desc_img0;
+    // Ptr<BriefDescriptorExtractor> brief_img0 =  cv::xfeatures2d::BriefDescriptorExtractor::create(64); //i don't know what 64 means - it was in the example
+    // brief_img0->compute(img0.data, feature_points_depth.points, desc_img0); //feature_points_depth.points might need to be of type vector<KeyPoint>
 
     // match the points
-    vector<DMatch> matches;
-    Ptr<BFMatcher> desc_matcher = cv::BFMatcher::create(cv::NORM_L2, true); //choose NORM_L1, NORM_L2, NORM_HAMMING, NORM_HAMMING2. 
-    desc_matcher->match(desc_img0, desc_img1, matches, Mat());
+    // vector<DMatch> matches;
+    // Ptr<BFMatcher> desc_matcher = cv::BFMatcher::create(cv::NORM_L2, true); //choose NORM_L1, NORM_L2, NORM_HAMMING, NORM_HAMMING2. 
+    // desc_matcher->match(desc_img0, desc_img1, matches, Mat());
 
 
 
