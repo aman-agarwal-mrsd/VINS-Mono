@@ -13,3 +13,7 @@ test/
 test.launch
 .vscode/
 bagfiles/
+test_scripts/CMakeFiles
+test_scripts/Makefile
+test_scripts/CMakeCache.txt
+test_scripts/cmake_install.cmake
