@@ -119,6 +119,7 @@ std::vector<pcl_images_map> getMeasurements()
     return measurements;
 }
 
+
 // thread: Depth Estimation
 void depth_estimator()
 {
