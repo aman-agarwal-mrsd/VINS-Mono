@@ -4,6 +4,7 @@
 #include <opencv2/features2d.hpp>
 #include <opencv2/xfeatures2d.hpp>
 #include <opencv2/xfeatures2d/nonfree.hpp>
+#include <opencv2/calib3d.hpp>
 #include <iostream>
 
 #include<string>
@@ -12,6 +13,16 @@ using namespace cv;
 using namespace std;
 
 void track_features(Mat img0, Mat img1) {
+
+    //Account for distortion in intrinsics
+    float fx = 4.6115862106007575e+02, fy = 4.5975286598073296e+02, cx = 3.6265929181685937e+02, cy = 2.4852105668448124e+02;
+    Mat intrinsic_cam0 = (Mat1d(3, 3) << fx, 0, cx, 0, fy, cy, 0, 0, 1);
+    float k1 = -2.9545645106987750e-01, k2 = 8.6623215640186171e-02, p1 = 2.0132892276082517e-06, p2 = 1.3924531371276508e-05;
+    Mat distortion_coefficients_cam0 = (Mat1d(1, 4) << k1, k2, p1, p2);
+    // Mat img_size_cam0 = (Mat1d(1, 2) << 752, 480);
+    double alpha = 1;
+    Mat new_intrinsic_cam0 = getOptimalNewCameraMatrix(intrinsic_cam0,distortion_coefficients_cam0,{752,480},alpha);
+
     //image 0
     vector<Point2f> img0_features;
     vector<KeyPoint> img0_kps;
