@@ -17,6 +17,7 @@ using namespace Eigen;
 
 class FeaturePerFrame
 {
+  //TODO: add new variable to track depth
   public:
     FeaturePerFrame(const Eigen::Matrix<double, 7, 1> &_point, double td)
     {
