@@ -1,6 +1,9 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/features2d.hpp>
+#include <opencv2/xfeatures2d.hpp>
+#include <opencv2/xfeatures2d/nonfree.hpp>
 #include <iostream>
 
 #include<string>
@@ -9,19 +12,50 @@ using namespace cv;
 using namespace std;
 
 void track_features(Mat img0, Mat img1) {
+    //image 0
     vector<Point2f> img0_features;
-    vector<KeyPoint> kps;
+    vector<KeyPoint> img0_kps;
     int max_corners = 150;
     double quality = 0.01, min_distance = 30;
     goodFeaturesToTrack(img0,img0_features,max_corners,quality,min_distance);
     for (int i=0; i<img0_features.size();i++) {
-        Point2f pt_to_push = img0_features[i];
-        KeyPoint kp;
-        kp.pt = pt_to_push;
-        kps.push_back(kp);
+        Point2f pt_to_push0 = img0_features[i];
+        KeyPoint img0_kp;
+        img0_kp.pt = pt_to_push0;
+        img0_kps.push_back(img0_kp);
         // cout<<"x:"<<img0_features[i].x<<", y:"<<img0_features[i].y<<endl;
         // cout<<"x:"<<kp.pt.x<<", y:"<<kp.pt.y<<endl;
     }
+
+    //image 1
+    vector<Point2f> img1_features;
+    vector<KeyPoint> img1_kps;
+
+    goodFeaturesToTrack(img1,img1_features,max_corners,quality,min_distance);
+    for (int i=0; i<img1_features.size();i++) {
+        Point2f pt_to_push1 = img1_features[i];
+        KeyPoint img1_kp;
+        img1_kp.pt = pt_to_push1;
+        img1_kps.push_back(img1_kp);
+        // cout<<"x:"<<img0_features[i].x<<", y:"<<img0_features[i].y<<endl;
+        // cout<<"x:"<<kp.pt.x<<", y:"<<kp.pt.y<<endl;
+    }
+
+    //run BRIEF descriptor on Image 0
+    cv::Mat img0_desc;
+    Ptr<cv::xfeatures2d::BriefDescriptorExtractor> brief_img0 =  cv::xfeatures2d::BriefDescriptorExtractor::create(64); //i don't know what 64 means - it was in the example
+    brief_img0->compute(img0.data, img0_kps, img0_desc); //feature_points_depth.points might need to be of type vector<KeyPoint>
+
+    //run BRIEF descriptor on Image 1
+    cv::Mat img1_desc;
+    Ptr<cv::xfeatures2d::BriefDescriptorExtractor> brief_img1 =  cv::xfeatures2d::BriefDescriptorExtractor::create(64); //i don't know what 64 means - it was in the example
+    brief_img1->compute(img1.data, img1_kps, img1_desc); //feature_points_depth.points might need to be of type vector<KeyPoint>
+
+    // match the points
+    vector<DMatch> matches;
+    Ptr<BFMatcher> desc_matcher = cv::BFMatcher::create(cv::NORM_L2, true); //choose NORM_L1, NORM_L2, NORM_HAMMING, NORM_HAMMING2. 
+    desc_matcher->match(img0_desc, img1_desc, matches, Mat());
+
 }
 
 int main()
