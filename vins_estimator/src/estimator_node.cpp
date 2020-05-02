@@ -322,7 +322,7 @@ void process()
                 double velocity_y = img_msg->channels[4].values[i];
                 ROS_ASSERT(z == 1); //ensures undistortion/normalization
                 // TODO Copy the estimated depth to z
-                
+                z = img_msg->channels[6].values[i];
                 Eigen::Matrix<double, 7, 1> xyz_uv_velocity;
                 xyz_uv_velocity << x, y, z, p_u, p_v, velocity_x, velocity_y;
                 image[feature_id].emplace_back(camera_id,  xyz_uv_velocity);
