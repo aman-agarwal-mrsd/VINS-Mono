@@ -22,6 +22,7 @@ void track_features(Mat img0, Mat img1) {
     // Mat img_size_cam0 = (Mat1d(1, 2) << 752, 480);
     double alpha = 1;
     Mat new_intrinsic_cam0 = getOptimalNewCameraMatrix(intrinsic_cam0,distortion_coefficients_cam0,{752,480},alpha);
+    Mat new_intrinsic_cam1 = new_intrinsic_cam0; 
 
     //image 0
     vector<Point2f> img0_features;
