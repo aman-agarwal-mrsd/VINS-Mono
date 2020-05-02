@@ -9,11 +9,17 @@ using namespace cv;
 using namespace std;
 
 void track_features(Mat img0, Mat img1) {
-    vector<KeyPoint> img0_features;
+    vector<Point2f> img0_features;
+    vector<KeyPoint> kps;
     int max_corners = 150;
     double quality = 0.01, min_distance = 30;
     goodFeaturesToTrack(img0,img0_features,max_corners,quality,min_distance);
-    cout<<img0_features.size();
+    for (int i=0; i<img0_features.size();i++) {
+        Point2f pt(img0_features[i].x,img0_features[i].y);
+        KeyPoint kp(pt);
+        kps.push_back(kp);
+        // cout<<"x:"<<img0_features[i].x<<", y:"<<img0_features[i].y<<endl;
+    }
 }
 
 int main()
