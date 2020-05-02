@@ -135,8 +135,10 @@ void Estimator::processImage(const map<int, vector<pair<int, Eigen::Matrix<doubl
     ROS_DEBUG("number of feature: %d", f_manager.getFeatureCount());
     Headers[frame_count] = header;
 
+    // Creating an Image frame object and adding point features and the IMU pre-integration
     ImageFrame imageframe(image, header.stamp.toSec());
     imageframe.pre_integration = tmp_pre_integration;
+    // Add the new image-frame to a map of time to image_frame 
     all_image_frame.insert(make_pair(header.stamp.toSec(), imageframe)); //current image frame into all image frames
     tmp_pre_integration = new IntegrationBase{acc_0, gyr_0, Bas[frame_count], Bgs[frame_count]};
 
@@ -474,6 +476,8 @@ bool Estimator::relativePose(Matrix3d &relative_R, Vector3d &relative_T, int &l)
     return false;
 }
 
+/* Only computes odometry if frame count >= window_size
+   and we have already solved an Initial Estimate */
 void Estimator::solveOdometry()
 {
     if (frame_count < WINDOW_SIZE)
