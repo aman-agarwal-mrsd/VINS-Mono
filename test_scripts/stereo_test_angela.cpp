@@ -15,10 +15,12 @@ void track_features(Mat img0, Mat img1) {
     double quality = 0.01, min_distance = 30;
     goodFeaturesToTrack(img0,img0_features,max_corners,quality,min_distance);
     for (int i=0; i<img0_features.size();i++) {
-        Point2f pt(img0_features[i].x,img0_features[i].y);
-        KeyPoint kp(pt);
+        Point2f pt_to_push = img0_features[i];
+        KeyPoint kp;
+        kp.pt = pt_to_push;
         kps.push_back(kp);
         // cout<<"x:"<<img0_features[i].x<<", y:"<<img0_features[i].y<<endl;
+        // cout<<"x:"<<kp.pt.x<<", y:"<<kp.pt.y<<endl;
     }
 }
 
