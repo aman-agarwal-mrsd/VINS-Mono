@@ -51,15 +51,21 @@ void track_features(Mat img0, Mat img1) {
     brief_img1->compute(img1, img1_kps, img1_desc); //feature_points_depth.points might need to be of type vector<KeyPoint>
 
     // match the points
-    vector<DMatch> matches;
-    Ptr<BFMatcher> desc_matcher = cv::BFMatcher::create(cv::NORM_L2, true); //choose NORM_L1, NORM_L2, NORM_HAMMING, NORM_HAMMING2. 
-    desc_matcher->match(img0_desc, img1_desc, matches, Mat());
+    // vector<DMatch> matches;
+    // Ptr<BFMatcher> desc_matcher = cv::BFMatcher::create(cv::NORM_L2, true); //choose NORM_L1, NORM_L2, NORM_HAMMING, NORM_HAMMING2. 
+    // desc_matcher->match(img0_desc, img1_desc, matches, Mat());
+
+    if(img0_desc.type()!=CV_32F) {
+        img0_desc.convertTo(img0_desc, CV_32F);
+    }
+
+    if(img1_desc.type()!=CV_32F) {
+        img1_desc.convertTo(img1_desc, CV_32F);
+    }
 
     Ptr<DescriptorMatcher> flann_matcher = DescriptorMatcher::create(DescriptorMatcher::FLANNBASED);
     std::vector< std::vector<DMatch> > flann_matches;
     flann_matcher->knnMatch(img0_desc, img1_desc, flann_matches, 2 );
-
-
 
     //-- Filter matches using the Lowe's ratio test
     const float ratio_thresh = 0.7f;
