@@ -126,13 +126,13 @@ void track_features(Mat img0, Mat img1) {
     }
 
     // TODO Replace N by number of points
-    cv::Mat pnts3D(1,N,CV_64FC4); // Output Matrix
+    cv::Mat pnts3D;// Output Matrix
 
-    // Create input points matrix
-    cv::Mat cam0pnts(1,N,CV_64FC2);
-    cv::Mat cam1pnts(1,N,CV_64FC2);
+    // // Create input points matrix
+    // cv::Mat cam0pnts(1,N,CV_64FC2);
+    // cv::Mat cam1pnts(1,N,CV_64FC2);
     // Populating pnts3D
-    cv::triangulatePoints(cam0_proj,cam1_proj,cam0pnts,cam1pnts,pnts3D);
+    cv::triangulatePoints(cam0_proj,cam1_proj,triangulation_points0,triangulation_points1,pnts3D);
     
 
     //-- Draw matches
