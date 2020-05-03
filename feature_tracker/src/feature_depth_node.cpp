@@ -153,6 +153,8 @@ void depth_estimator()
             ROS_INFO("Feature Time: %f", measurement.feature_msg->header.stamp.toSec());
             // sensor_msgs::PointCloud feature_points_depth = ftracker.computeDepthMap(measurement.img0_msg, measurement.img1_msg, measurement.feature_msg);
 
+            ROS_INFO("Image Size: %d", measurement.img0_msg->data.size());
+
             //Handles message data before passing to feature depth node
             //Euroc images are already in mono8 encoding
             cv_bridge::CvImageConstPtr img0_ptr, img1_ptr;
@@ -166,6 +168,7 @@ void depth_estimator()
                 // point.y = measurement.feature_msg->points[i].y;
                 features.push_back(point);
             }
+            ROS_INFO("Image Size: %d", img0_ptr->image.size());
             sensor_msgs::ChannelFloat32 depth_channel = ftracker.computeDepthMap2(img0_ptr->image, img1_ptr->image, features);
 
             //Publish:

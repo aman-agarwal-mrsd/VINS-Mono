@@ -94,9 +94,11 @@ void img_callback(const sensor_msgs::ImageConstPtr &img_msg)
         ptr = cv_bridge::toCvCopy(img, sensor_msgs::image_encodings::MONO8);
     }
     else
+        ROS_INFO("expected");
         ptr = cv_bridge::toCvCopy(img_msg, sensor_msgs::image_encodings::MONO8);
 
     cv::Mat show_img = ptr->image;
+    ROS_INFO("NODE Image Size: %d", ptr->image.size());
     TicToc t_r;
     // Reading image from all cameras
     for (int i = 0; i < NUM_OF_CAM; i++)
