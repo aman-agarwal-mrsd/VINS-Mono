@@ -28,6 +28,14 @@ void track_features(Mat img0, Mat img1) {
     cv::Mat body2cam0 = (cv::Mat1d(4,4) << 0.0148655429818, -0.999880929698, 0.00414029679422, -0.0216401454975, 0.999557249008, 0.0149672133247, 0.025715529948,  -0.064676986768, -0.0257744366974, 0.00375618835797, 0.999660727178, 0.00981073058949, 0, 0, 0, 1);
     cv::Mat body2cam1 = (cv::Mat1d(4,4) << 0.0125552670891, -0.999755099723, 0.0182237714554, -0.0198435579556, 0.999598781151, 0.0130119051815, 0.0251588363115, 0.0453689425024, -0.0253898008918, 0.0179005838253, 0.999517347078, 0.00786212447038, 0, 0, 0, 1);
     cv::Mat cam1_to_cam0 = body2cam1.inv() * body2cam0;
+
+    cout << cam1_to_cam0 << endl;
+
+    cout << cam1_to_cam0.at<double>(0,0) << " " << cam1_to_cam0.at<double>(0,1) << " " << cam1_to_cam0.at<double>(0,2) << " " << cam1_to_cam0.at<double>(0,3) << endl
+         << cam1_to_cam0.at<double>(1,0) << " " << cam1_to_cam0.at<double>(1,1) << " " << cam1_to_cam0.at<double>(1,2) << " " << cam1_to_cam0.at<double>(1,3) << endl
+         << cam1_to_cam0.at<double>(2,0) << " " << cam1_to_cam0.at<double>(2,1) << " " << cam1_to_cam0.at<double>(2,2) << " " << cam1_to_cam0.at<double>(2,3) << endl
+         << cam1_to_cam0.at<double>(3,0) << " " << cam1_to_cam0.at<double>(3,1) << " " << cam1_to_cam0.at<double>(3,2) << " " << cam1_to_cam0.at<double>(3,3) << endl;
+
     cv::Mat cam0_to_cam0 = (cv::Mat1d(3,4) <<   1.0, 0.0, 0.0, 0.0, 
                                                 0.0, 1.0, 0.0, 0,0,
                                                 0.0, 0.0, 1.0, 0.0 );
@@ -39,7 +47,6 @@ void track_features(Mat img0, Mat img1) {
     cv::Mat cam0_proj = new_intrinsic_cam0 * cam0_to_cam0;
     cv::Mat cam1_proj = new_intrinsic_cam1 * cam1_to_cam0;
         
-
     //image 0
     vector<Point2f> img0_features;
     vector<KeyPoint> img0_kps;
