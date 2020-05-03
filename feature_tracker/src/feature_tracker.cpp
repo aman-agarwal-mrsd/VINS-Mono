@@ -479,76 +479,75 @@ sensor_msgs::ChannelFloat32 FeatureTracker::computeDepthMap2(const cv::Mat &_img
     cv::Mat cam0_proj = new_intrinsic_cam0 * cam0_to_cam0;
     cv::Mat cam1_proj = new_intrinsic_cam1 * cam1_to_cam0;
 
-    // // Find features for img1
-    // vector<Point2f> img0_features;
-    // vector<KeyPoint> img0_kps;
-    // int max_corners = 150;
-    // double quality = 0.01, min_distance = 30;   
-    // vector<Point2f> img1_features;
-    // vector<KeyPoint> img1_kps;
-    // goodFeaturesToTrack(img1,img1_features,max_corners,quality,min_distance);
-    // for (int i=0; i<img1_features.size();i++) {
-    //     Point2f pt_to_push1 = img1_features[i];
-    //     KeyPoint img1_kp;
-    //     img1_kp.pt = pt_to_push1;
-    //     img1_kps.push_back(img1_kp);
-    // }
+    // Find features for img1
+    vector<Point2f> img0_features;
+    int max_corners = 150;
+    double quality = 0.01, min_distance = 30;   
+    vector<Point2f> img1_features;
+    vector<KeyPoint> img1_kps;
+    goodFeaturesToTrack(img1,img1_features,max_corners,quality,min_distance);
+    for (int i=0; i<img1_features.size();i++) {
+        Point2f pt_to_push1 = img1_features[i];
+        KeyPoint img1_kp;
+        img1_kp.pt = pt_to_push1;
+        img1_kps.push_back(img1_kp);
+    }
 
-    // // Copy img0 features to different container
-    // vector<KeyPoint> img0_kps;
-    // for (int i=0; i<feature_points.size();i++) {
-    //     Point2f pt_to_push0 = feature_points[i];
-    //     KeyPoint img0_kp;
-    //     img0_kp.pt = pt_to_push0;
-    //     img0_kps.push_back(img0_kp);
-    // }
+    // Copy img0 features to different container
+    vector<KeyPoint> img0_kps;
+    for (int i=0; i<feature_points.size();i++) {
+        Point2f pt_to_push0 = feature_points[i];
+        KeyPoint img0_kp;
+        img0_kp.pt = pt_to_push0;
+        img0_kps.push_back(img0_kp);
+    }
 
-    // //run BRIEF descriptor on Image 0
-    // cv::Mat img0_desc;
-    // Ptr<cv::xfeatures2d::BriefDescriptorExtractor> brief_img0 =  cv::xfeatures2d::BriefDescriptorExtractor::create(64); //i don't know what 64 means - it was in the example
-    // brief_img0->compute(img0, img0_kps, img0_desc); //feature_points_depth.points might need to be of type vector<KeyPoint>
+    //run BRIEF descriptor on Image 0
+    cv::Mat img0_desc;
+    Ptr<cv::xfeatures2d::BriefDescriptorExtractor> brief_img0 =  cv::xfeatures2d::BriefDescriptorExtractor::create(64); //i don't know what 64 means - it was in the example
+    brief_img0->compute(img0, img0_kps, img0_desc); //feature_points_depth.points might need to be of type vector<KeyPoint>
 
-    // //run BRIEF descriptor on Image 1
-    // cv::Mat img1_desc;
-    // Ptr<cv::xfeatures2d::BriefDescriptorExtractor> brief_img1 =  cv::xfeatures2d::BriefDescriptorExtractor::create(64); //i don't know what 64 means - it was in the example
-    // brief_img1->compute(img1, img1_kps, img1_desc); //feature_points_depth.points might need to be of type vector<KeyPoint>
+    //run BRIEF descriptor on Image 1
+    cv::Mat img1_desc;
+    Ptr<cv::xfeatures2d::BriefDescriptorExtractor> brief_img1 =  cv::xfeatures2d::BriefDescriptorExtractor::create(64); //i don't know what 64 means - it was in the example
+    brief_img1->compute(img1, img1_kps, img1_desc); //feature_points_depth.points might need to be of type vector<KeyPoint>
 
-    // // Find correspondances
-    // if(img0_desc.type()!=CV_32F) {
-    //     img0_desc.convertTo(img0_desc, CV_32F);
-    // }
+    // Find correspondances
+    if(img0_desc.type()!=CV_32F) {
+        img0_desc.convertTo(img0_desc, CV_32F);
+    }
 
-    // if(img1_desc.type()!=CV_32F) {
-    //     img1_desc.convertTo(img1_desc, CV_32F);
-    // }
+    if(img1_desc.type()!=CV_32F) {
+        img1_desc.convertTo(img1_desc, CV_32F);
+    }
 
-    // Ptr<DescriptorMatcher> flann_matcher = DescriptorMatcher::create(DescriptorMatcher::FLANNBASED);
-    // std::vector< std::vector<DMatch> > flann_matches;
-    // flann_matcher->knnMatch(img0_desc, img1_desc, flann_matches, 2 );
+    Ptr<DescriptorMatcher> flann_matcher = DescriptorMatcher::create(DescriptorMatcher::FLANNBASED);
+    std::vector< std::vector<DMatch> > flann_matches;
+    flann_matcher->knnMatch(img0_desc, img1_desc, flann_matches, 2 );
 
-    // //-- Filter matches using the Lowe's ratio test
-    // const float ratio_thresh = 0.7f;
-    // std::vector<DMatch> good_matches;
-    // for (size_t i = 0; i < flann_matches.size(); i++)
-    // {
-    //     if (flann_matches[i][0].distance < ratio_thresh * flann_matches[i][1].distance)
-    //     {
-    //         good_matches.push_back(flann_matches[i][0]);
-    //     }
-    // }
+    //-- Filter matches using the Lowe's ratio test
+    const float ratio_thresh = 0.7f;
+    std::vector<DMatch> good_matches;
+    for (size_t i = 0; i < flann_matches.size(); i++)
+    {
+        if (flann_matches[i][0].distance < ratio_thresh * flann_matches[i][1].distance)
+        {
+            good_matches.push_back(flann_matches[i][0]);
+        }
+    }
 
-    // //triangulation
-    // vector<cv::Point2d> triangulation_points0, triangulation_points1;
+    //triangulation
+    vector<cv::Point2d> triangulation_points0, triangulation_points1;
 
-    // for (size_t j = 0; j<good_matches.size(); j++)
-    // {
-    //     triangulation_points0.push_back(img0_kps[good_matches[j].queryIdx].pt);
-    //     triangulation_points1.push_back(img1_kps[good_matches[j].trainIdx].pt);
-    // }
+    for (size_t j = 0; j<good_matches.size(); j++)
+    {
+        triangulation_points0.push_back(img0_kps[good_matches[j].queryIdx].pt);
+        triangulation_points1.push_back(img1_kps[good_matches[j].trainIdx].pt);
+    }
 
-    // cv::Mat pnts3D;// Output Matrix
+    cv::Mat pnts3D;// Output Matrix
 
-    // cv::triangulatePoints(cam0_proj,cam1_proj,triangulation_points0,triangulation_points1,pnts3D);
+    cv::triangulatePoints(cam0_proj,cam1_proj,triangulation_points0,triangulation_points1,pnts3D);
     
     for (unsigned int i=0; i<good_matches.size(); i++)
     {
