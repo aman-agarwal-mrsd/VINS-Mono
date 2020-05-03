@@ -163,12 +163,15 @@ void depth_estimator()
             vector<cv::Point2f> features;
             for (unsigned int i = 0; i < measurement.feature_msg->points.size(); i++)
             {
-                cv::Point2f point(measurement.feature_msg->points[i].x,measurement.feature_msg->points[i].y);
+                // cv::Point2f point(measurement.feature_msg->points[i].x,measurement.feature_msg->points[i].y);
+                cv::Point2f point(measurement.feature_msg->channels[1].values[i],measurement.feature_msg->channels[2].values[i]);
                 // point.x = measurement.feature_msg->points[i].x;
                 // point.y = measurement.feature_msg->points[i].y;
                 features.push_back(point);
             }
-            ROS_INFO("Image Size: %d", img0_ptr->image.size());
+            // ROS_INFO("Image Row Size: %zd", img0_ptr->image.rows());
+            // ROS_INFO("Image Column Size: %zd", img0_ptr->image.cols());
+            // cout << img0_ptr->image;
             sensor_msgs::ChannelFloat32 depth_channel = ftracker.computeDepthMap2(img0_ptr->image, img1_ptr->image, features);
 
             //Publish:

@@ -52,6 +52,13 @@ void reduceVector(vector<int> &v, vector<uchar> status)
     v.resize(j);
 }
 
+void print_vector(std::vector<cv::Point2f> const &input)
+{
+	for (int i = 0; i < input.size(); i++) {
+		std::cout << input.at(i).x << ", " << input.at(i).y << endl;
+	}
+}
+
 
 FeatureTracker::FeatureTracker()
 {
@@ -438,6 +445,9 @@ sensor_msgs::ChannelFloat32 FeatureTracker::computeDepthMap2(const cv::Mat &_img
 {
     ROS_INFO("Computing Depth Map");
 
+    // cout << feature << endl << "that was image 0";
+    print_vector(feature_points);
+
     cv::Mat img0, img1;
     if (EQUALIZE)
     {
@@ -451,6 +461,8 @@ sensor_msgs::ChannelFloat32 FeatureTracker::computeDepthMap2(const cv::Mat &_img
         img0 = _img0;
         img1 = _img1;
     
+    // cout << img0 << endl << "that was image 0";
+
     sensor_msgs::ChannelFloat32 depth_of_point;
     depth_of_point.name = "Depth";
     vector<float> value_array(feature_points.size(), -1.0);
@@ -481,7 +493,7 @@ sensor_msgs::ChannelFloat32 FeatureTracker::computeDepthMap2(const cv::Mat &_img
 
     // Find features for img1
     vector<Point2f> img0_features;
-    int max_corners = 150;
+    int max_corners = 500;
     double quality = 0.01, min_distance = 30;   
     vector<Point2f> img1_features;
     vector<KeyPoint> img1_kps;
@@ -539,19 +551,19 @@ sensor_msgs::ChannelFloat32 FeatureTracker::computeDepthMap2(const cv::Mat &_img
     //triangulation
     vector<cv::Point2d> triangulation_points0, triangulation_points1;
     ROS_INFO("good matches size: %zd", good_matches.size());
-    // for (size_t j = 0; j<good_matches.size(); j++)
-    // {
-    //     triangulation_points0.push_back(img0_kps[good_matches[j].queryIdx].pt);
-    //     triangulation_points1.push_back(img1_kps[good_matches[j].trainIdx].pt);
-    // }
+    for (size_t j = 0; j<good_matches.size(); j++)
+    {
+        triangulation_points0.push_back(img0_kps[good_matches[j].queryIdx].pt);
+        triangulation_points1.push_back(img1_kps[good_matches[j].trainIdx].pt);
+    }
 
-    // cv::Mat pnts3D;// Output Matrix
+    cv::Mat pnts3D;// Output Matrix
 
-    // cv::triangulatePoints(cam0_proj,cam1_proj,triangulation_points0,triangulation_points1,pnts3D);
+    cv::triangulatePoints(cam0_proj,cam1_proj,triangulation_points0,triangulation_points1,pnts3D);
     
-    // for (unsigned int i=0; i<good_matches.size(); i++)
-    // {
-    //     depth_of_point.values[good_matches[i].queryIdx] = pnts3D.at<float>(2,i) / pnts3D.at<float>(3,i); 
-    // }
+    for (unsigned int i=0; i<good_matches.size(); i++)
+    {
+        depth_of_point.values[good_matches[i].queryIdx] = pnts3D.at<float>(2,i) / pnts3D.at<float>(3,i); 
+    }
     return depth_of_point;
 }
