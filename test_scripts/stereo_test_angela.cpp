@@ -34,10 +34,11 @@ void track_features(Mat img0, Mat img1) {
         // cv::Matx44f cam0_to_cam0(   1.0, 0.0, 0.0, 0.0, 
         //                         0.0, 1.0, 0.0, 0,0,
         //                         0.0, 0.0, 1.0, 0.0 );
-        
+
+    // Creating final projection matrixes for both cameras  
     cv::Mat cam0_proj = new_intrinsic_cam0 * cam0_to_cam0;
     cv::Mat cam1_proj = new_intrinsic_cam1 * cam0_to_cam1;
-    
+        
 
     //image 0
     vector<Point2f> img0_features;
@@ -123,6 +124,15 @@ void track_features(Mat img0, Mat img1) {
         //cout<<"triang0 size"<<triangulation_points0.size()<<endl;
         //cout<<"triang1 size"<<triangulation_points1.size()<<endl;
     }
+
+    // TODO Replace N by number of points
+    cv::Mat pnts3D(1,N,CV_64FC4); // Output Matrix
+
+    // Create input points matrix
+    cv::Mat cam0pnts(1,N,CV_64FC2);
+    cv::Mat cam1pnts(1,N,CV_64FC2);
+    // Populating pnts3D
+    cv::triangulatePoints(cam0_proj,cam1_proj,cam0pnts,cam1pnts,pnts3D);
     
 
     //-- Draw matches
