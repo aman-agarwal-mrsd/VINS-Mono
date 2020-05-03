@@ -486,7 +486,7 @@ sensor_msgs::ChannelFloat32 FeatureTracker::computeDepthMap2(const cv::Mat &_img
     vector<Point2f> img1_features;
     vector<KeyPoint> img1_kps;
     goodFeaturesToTrack(img1,img1_features,max_corners,quality,min_distance);
-    for (int i=0; i<img1_features.size();i++) {
+    for (unsigned int i=0; i<img1_features.size();i++) {
         Point2f pt_to_push1 = img1_features[i];
         KeyPoint img1_kp;
         img1_kp.pt = pt_to_push1;
@@ -495,7 +495,7 @@ sensor_msgs::ChannelFloat32 FeatureTracker::computeDepthMap2(const cv::Mat &_img
 
     // Copy img0 features to different container
     vector<KeyPoint> img0_kps;
-    for (int i=0; i<feature_points.size();i++) {
+    for (unsigned int i=0; i<feature_points.size();i++) {
         Point2f pt_to_push0 = feature_points[i];
         KeyPoint img0_kp;
         img0_kp.pt = pt_to_push0;
@@ -551,7 +551,7 @@ sensor_msgs::ChannelFloat32 FeatureTracker::computeDepthMap2(const cv::Mat &_img
     
     for (unsigned int i=0; i<good_matches.size(); i++)
     {
-        depth_of_point[good_matches[i].queryIdx] = pnts3D.at(2,i) / pnts3D.at(3,i); 
+        depth_of_point.values[good_matches[i].queryIdx] = pnts3D.at<float>(2,i) / pnts3D.at<float>(3,i); 
     }
     return depth_of_point;
 }
