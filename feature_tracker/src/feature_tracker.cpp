@@ -446,7 +446,7 @@ sensor_msgs::ChannelFloat32 FeatureTracker::computeDepthMap2(const cv::Mat &_img
     ROS_INFO("Computing Depth Map");
 
     // cout << feature << endl << "that was image 0";
-    print_vector(feature_points);
+    // print_vector(feature_points);
 
     cv::Mat img0, img1;
     if (EQUALIZE)
@@ -494,10 +494,10 @@ sensor_msgs::ChannelFloat32 FeatureTracker::computeDepthMap2(const cv::Mat &_img
     // Find features for img1
     vector<Point2f> img0_features;
     int max_corners = 500;
-    double quality = 0.01, min_distance = 30;   
+    double quality = 0.01;   
     vector<Point2f> img1_features;
     vector<KeyPoint> img1_kps;
-    goodFeaturesToTrack(img1,img1_features,max_corners,quality,min_distance);
+    goodFeaturesToTrack(img1,img1_features,max_corners,quality,MIN_DIST);
     for (unsigned int i=0; i<img1_features.size();i++) {
         Point2f pt_to_push1 = img1_features[i];
         KeyPoint img1_kp;
@@ -556,6 +556,8 @@ sensor_msgs::ChannelFloat32 FeatureTracker::computeDepthMap2(const cv::Mat &_img
         triangulation_points0.push_back(img0_kps[good_matches[j].queryIdx].pt);
         triangulation_points1.push_back(img1_kps[good_matches[j].trainIdx].pt);
     }
+
+    cout<<"good matches "<<good_matches.size()<<endl;
 
     cv::Mat pnts3D;// Output Matrix
 
