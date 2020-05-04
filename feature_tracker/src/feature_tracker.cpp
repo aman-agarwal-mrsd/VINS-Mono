@@ -560,9 +560,10 @@ sensor_msgs::ChannelFloat32 FeatureTracker::computeDepthMap2(const cv::Mat &_img
     cout<<"good matches "<<good_matches.size()<<endl;
 
     cv::Mat pnts3D;// Output Matrix
-
-    cv::triangulatePoints(cam0_proj,cam1_proj,triangulation_points0,triangulation_points1,pnts3D);
-    
+    if (!good_matches.empty())
+    {
+        cv::triangulatePoints(cam0_proj,cam1_proj,triangulation_points0,triangulation_points1,pnts3D);
+    }
     for (unsigned int i=0; i<good_matches.size(); i++)
     {
         depth_of_point.values[good_matches[i].queryIdx] = pnts3D.at<float>(2,i) / pnts3D.at<float>(3,i); 
