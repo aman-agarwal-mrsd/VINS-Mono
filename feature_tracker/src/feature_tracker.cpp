@@ -445,8 +445,7 @@ sensor_msgs::ChannelFloat32 FeatureTracker::computeDepthMap2(const cv::Mat &_img
 {
     ROS_INFO("Computing Depth Map");
 
-    // cout << feature << endl << "that was image 0";
-    print_vector(feature_points);
+    // print_vector(feature_points);
 
     cv::Mat img0, img1;
     if (EQUALIZE)
