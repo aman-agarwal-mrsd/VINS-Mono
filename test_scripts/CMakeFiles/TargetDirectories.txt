@@ -1,3 +1,0 @@
-/home/ajchao/catkin_ws/src/VINS-Mono/test_scripts/CMakeFiles/edit_cache.dir
-/home/ajchao/catkin_ws/src/VINS-Mono/test_scripts/CMakeFiles/stereo_test.dir
-/home/ajchao/catkin_ws/src/VINS-Mono/test_scripts/CMakeFiles/rebuild_cache.dir

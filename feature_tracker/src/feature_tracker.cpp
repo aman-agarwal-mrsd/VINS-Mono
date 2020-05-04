@@ -6,11 +6,21 @@
 #include "opencv2/imgcodecs.hpp"
 #include "opencv2/highgui.hpp"
 #include "opencv2/core/utility.hpp"
+#include <opencv2/features2d.hpp>
+#include <opencv2/xfeatures2d.hpp>
+#include <opencv2/xfeatures2d/nonfree.hpp>
+
+#include <iostream>
 
 #include <sensor_msgs/Image.h>
 #include <sensor_msgs/image_encodings.h>
 #include <sensor_msgs/PointCloud.h>
 #include <sensor_msgs/Imu.h>
+
+#include <algorithm>
+
+using namespace cv;
+using namespace std;
 
 int FeatureTracker::n_id = 0;
 
@@ -42,6 +52,13 @@ void reduceVector(vector<int> &v, vector<uchar> status)
     v.resize(j);
 }
 
+void print_vector(std::vector<cv::Point2f> const &input)
+{
+	for (int i = 0; i < input.size(); i++) {
+		std::cout << input.at(i).x << ", " << input.at(i).y << endl;
+	}
+}
+
 
 FeatureTracker::FeatureTracker()
 {
@@ -49,7 +66,7 @@ FeatureTracker::FeatureTracker()
 
 void FeatureTracker::setMask()
 {
-    if(FISHEYE)
+    if(FISHEYE) // Euroc config not using fisheye
         mask = fisheye_mask.clone();
     else
         mask = cv::Mat(ROW, COL, CV_8UC1, cv::Scalar(255));
@@ -422,4 +439,134 @@ sensor_msgs::PointCloud FeatureTracker::computeDepthMap(const sensor_msgs::Image
 
     return feature_points_depth;
 
+}
+
+sensor_msgs::ChannelFloat32 FeatureTracker::computeDepthMap2(const cv::Mat &_img0, const cv::Mat &_img1, const vector<cv::Point2f> &feature_points)
+{
+    ROS_INFO("Computing Depth Map");
+
+    // print_vector(feature_points);
+
+    cv::Mat img0, img1;
+    if (EQUALIZE)
+    {
+        cv::Ptr<cv::CLAHE> clahe = cv::createCLAHE(3.0, cv::Size(8, 8));
+        TicToc t_c;
+        clahe->apply(_img0, img0);
+        clahe->apply(_img1, img1);
+        ROS_DEBUG("CLAHE costs: %fms", t_c.toc());
+    }
+    else
+        img0 = _img0;
+        img1 = _img1;
+    
+    // cout << img0 << endl << "that was image 0";
+
+    sensor_msgs::ChannelFloat32 depth_of_point;
+    depth_of_point.name = "Depth";
+    vector<float> value_array(feature_points.size(), -1.0);
+    depth_of_point.values = value_array;
+
+    //Account for distortion in intrinsics
+    float fx = 4.6115862106007575e+02, fy = 4.5975286598073296e+02, cx = 3.6265929181685937e+02, cy = 2.4852105668448124e+02;
+    cv::Mat intrinsic_cam0 = (Mat1d(3, 3) << fx, 0, cx, 0, fy, cy, 0, 0, 1);
+    float k1 = -2.9545645106987750e-01, k2 = 8.6623215640186171e-02, p1 = 2.0132892276082517e-06, p2 = 1.3924531371276508e-05;
+    cv::Mat distortion_coefficients_cam0 = (Mat1d(1, 4) << k1, k2, p1, p2); 
+
+    double alpha = 1;
+    Mat new_intrinsic_cam0 = getOptimalNewCameraMatrix(intrinsic_cam0,distortion_coefficients_cam0,{752,480},alpha);
+    Mat new_intrinsic_cam1 = new_intrinsic_cam0; 
+
+    //get transform from camera0 to camera 1
+    cv::Mat body2cam0 = (cv::Mat1d(4,4) << 0.0148655429818, -0.999880929698, 0.00414029679422, -0.0216401454975, 0.999557249008, 0.0149672133247, 0.025715529948,  -0.064676986768, -0.0257744366974, 0.00375618835797, 0.999660727178, 0.00981073058949, 0, 0, 0, 1);
+    cv::Mat body2cam1 = (cv::Mat1d(4,4) << 0.0125552670891, -0.999755099723, 0.0182237714554, -0.0198435579556, 0.999598781151, 0.0130119051815, 0.0251588363115, 0.0453689425024, -0.0253898008918, 0.0179005838253, 0.999517347078, 0.00786212447038, 0, 0, 0, 1);
+    cv::Mat cam1_to_cam0_temp = body2cam1.inv() * body2cam0;
+    cv::Mat cam1_to_cam0 = cam1_to_cam0_temp.rowRange(0,3);
+    cv::Mat cam0_to_cam0 = (cv::Mat1d(3,4) <<   1.0, 0.0, 0.0, 0.0, 
+                                                0.0, 1.0, 0.0, 0,0,
+                                                0.0, 0.0, 1.0, 0.0 );
+
+    // Creating final projection matrixes for both cameras  
+    cv::Mat cam0_proj = new_intrinsic_cam0 * cam0_to_cam0;
+    cv::Mat cam1_proj = new_intrinsic_cam1 * cam1_to_cam0;
+
+    // Find features for img1
+    vector<Point2f> img0_features;
+    int max_corners = 500;
+    double quality = 0.01;   
+    vector<Point2f> img1_features;
+    vector<KeyPoint> img1_kps;
+    goodFeaturesToTrack(img1,img1_features,max_corners,quality,MIN_DIST);
+    for (unsigned int i=0; i<img1_features.size();i++) {
+        Point2f pt_to_push1 = img1_features[i];
+        KeyPoint img1_kp;
+        img1_kp.pt = pt_to_push1;
+        img1_kps.push_back(img1_kp);
+    }
+
+    // Copy img0 features to different container
+    vector<KeyPoint> img0_kps;
+    for (unsigned int i=0; i<feature_points.size();i++) {
+        Point2f pt_to_push0 = feature_points[i];
+        KeyPoint img0_kp;
+        img0_kp.pt = pt_to_push0;
+        img0_kps.push_back(img0_kp);
+    }
+
+    //run BRIEF descriptor on Image 0
+    cv::Mat img0_desc;
+    Ptr<cv::xfeatures2d::BriefDescriptorExtractor> brief_img0 =  cv::xfeatures2d::BriefDescriptorExtractor::create(64); //i don't know what 64 means - it was in the example
+    brief_img0->compute(img0, img0_kps, img0_desc); //feature_points_depth.points might need to be of type vector<KeyPoint>
+
+    //run BRIEF descriptor on Image 1
+    cv::Mat img1_desc;
+    Ptr<cv::xfeatures2d::BriefDescriptorExtractor> brief_img1 =  cv::xfeatures2d::BriefDescriptorExtractor::create(64); //i don't know what 64 means - it was in the example
+    brief_img1->compute(img1, img1_kps, img1_desc); //feature_points_depth.points might need to be of type vector<KeyPoint>
+
+    // Find correspondances
+    if(img0_desc.type()!=CV_32F) {
+        img0_desc.convertTo(img0_desc, CV_32F);
+    }
+
+    if(img1_desc.type()!=CV_32F) {
+        img1_desc.convertTo(img1_desc, CV_32F);
+    }
+
+    Ptr<DescriptorMatcher> flann_matcher = DescriptorMatcher::create(DescriptorMatcher::FLANNBASED);
+    std::vector< std::vector<DMatch> > flann_matches;
+    flann_matcher->knnMatch(img0_desc, img1_desc, flann_matches, 2 );
+
+    //-- Filter matches using the Lowe's ratio test
+    const float ratio_thresh = 0.7f;
+    std::vector<DMatch> good_matches;
+    for (size_t i = 0; i < flann_matches.size(); i++)
+    {
+        if (flann_matches[i][0].distance < ratio_thresh * flann_matches[i][1].distance)
+        {
+            good_matches.push_back(flann_matches[i][0]);
+        }
+    }
+
+    //triangulation
+    vector<cv::Point2d> triangulation_points0, triangulation_points1;
+    ROS_INFO("good matches size: %zd", good_matches.size());
+    for (size_t j = 0; j<good_matches.size(); j++)
+    {
+        triangulation_points0.push_back(img0_kps[good_matches[j].queryIdx].pt);
+        triangulation_points1.push_back(img1_kps[good_matches[j].trainIdx].pt);
+    }
+
+    cout<<"good matches "<<good_matches.size()<<endl;
+
+    cv::Mat pnts3D;// Output Matrix
+    if (!good_matches.empty())
+    {
+        cv::triangulatePoints(cam0_proj,cam1_proj,triangulation_points0,triangulation_points1,pnts3D);
+    }
+    for (unsigned int i=0; i<good_matches.size(); i++)
+    {
+        depth_of_point.values[good_matches[i].queryIdx] = pnts3D.at<float>(2,i) / pnts3D.at<float>(3,i); 
+    }
+    
+    return depth_of_point;
 }

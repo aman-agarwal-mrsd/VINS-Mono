@@ -53,6 +53,8 @@ class FeatureTracker
 
     sensor_msgs::PointCloud computeDepthMap(const sensor_msgs::ImageConstPtr &img_msg0, const sensor_msgs::ImageConstPtr &img_msg1, const sensor_msgs::PointCloudConstPtr &feature_points);
 
+    sensor_msgs::ChannelFloat32 computeDepthMap2(const cv::Mat &_img0, const cv::Mat &_img1, const vector<cv::Point2f> &feature_points);
+
     cv::Mat mask;
     cv::Mat fisheye_mask;
     cv::Mat prev_img, cur_img, forw_img;

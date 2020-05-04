@@ -1,4 +1,5 @@
 #include "feature_manager.h"
+#include <ros/ros.h>
 
 int FeaturePerId::endFrame()
 {
@@ -255,6 +256,7 @@ void FeatureManager::triangulate(Vector3d Ps[], Vector3d tic[], Matrix3d ric[])
         // it_per_id.estimated_depth = (svd_method + stereo_depth)*0.5;
         it_per_id.estimated_depth = svd_method;
         //it_per_id->estimated_depth = INIT_DEPTH;
+        // ROS_INFO("estimated depth is: %f", it_per_id.estimated_depth);
 
         if (it_per_id.estimated_depth < 0.1)
         {

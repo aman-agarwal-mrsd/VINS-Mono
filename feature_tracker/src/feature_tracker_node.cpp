@@ -81,7 +81,7 @@ void img_callback(const sensor_msgs::ImageConstPtr &img_msg)
 
     // handles image message and stores information in msg, ptr
     cv_bridge::CvImageConstPtr ptr;
-    if (img_msg->encoding == "8UC1")
+    if (img_msg->encoding == "8UC1") // Euroc: is mono8
     {
         sensor_msgs::Image img;
         img.header = img_msg->header;
@@ -97,6 +97,7 @@ void img_callback(const sensor_msgs::ImageConstPtr &img_msg)
         ptr = cv_bridge::toCvCopy(img_msg, sensor_msgs::image_encodings::MONO8);
 
     cv::Mat show_img = ptr->image;
+    // ROS_INFO("NODE Image Size: %d", ptr->image.size());
     TicToc t_r;
     // Reading image from all cameras
     for (int i = 0; i < NUM_OF_CAM; i++)

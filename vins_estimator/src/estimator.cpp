@@ -801,7 +801,6 @@ void Estimator::optimization()
                 }     
             }
         }
-
     }
 
     ceres::Solver::Options options;
