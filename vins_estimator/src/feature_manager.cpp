@@ -252,11 +252,19 @@ void FeatureManager::triangulate(Vector3d Ps[], Vector3d tic[], Matrix3d ric[])
         //it_per_id->estimated_depth = svd_V[2] / svd_V[3];
 
         //TODO: can change estimated depth here but need to understand exactly how this variable is used
-        ROS_INFO("Estimated Depth, Stereo %f, Triangulation %f", stereo_depth, svd_method);
-        // it_per_id.estimated_depth = (svd_method + stereo_depth)*0.5;
-        it_per_id.estimated_depth = svd_method;
-        //it_per_id->estimated_depth = INIT_DEPTH;
-        // ROS_INFO("estimated depth is: %f", it_per_id.estimated_depth);
+        // ROS_INFO("Stereo Depth: %f, Triangulation: %f", stereo_depth, svd_method);
+
+        if (stereo_depth > 0 && stereo_depth < 100)
+        {
+            it_per_id.estimated_depth = (svd_method + stereo_depth)*0.5;
+            ROS_INFO("Stereo Depth: %f, Triangulation: %f", stereo_depth, svd_method);
+        }
+        else
+        {
+            it_per_id.estimated_depth = svd_method;
+        }
+        
+        ROS_INFO("estimated depth is: %f", it_per_id.estimated_depth);
 
         if (it_per_id.estimated_depth < 0.1)
         {
