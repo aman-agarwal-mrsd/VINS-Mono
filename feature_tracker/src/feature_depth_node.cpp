@@ -153,7 +153,7 @@ void depth_estimator()
             ROS_INFO("Feature Time: %f", measurement.feature_msg->header.stamp.toSec());
             // sensor_msgs::PointCloud feature_points_depth = ftracker.computeDepthMap(measurement.img0_msg, measurement.img1_msg, measurement.feature_msg);
 
-            ROS_INFO("Image Size: %d", measurement.img0_msg->data.size());
+            // ROS_INFO("Image Size: %d", measurement.img0_msg->data.size());
 
             //Handles message data before passing to feature depth node
             //Euroc images are already in mono8 encoding

@@ -445,7 +445,6 @@ sensor_msgs::ChannelFloat32 FeatureTracker::computeDepthMap2(const cv::Mat &_img
 {
     ROS_INFO("Computing Depth Map");
 
-    // cout << feature << endl << "that was image 0";
     // print_vector(feature_points);
 
     cv::Mat img0, img1;
@@ -568,5 +567,6 @@ sensor_msgs::ChannelFloat32 FeatureTracker::computeDepthMap2(const cv::Mat &_img
     {
         depth_of_point.values[good_matches[i].queryIdx] = pnts3D.at<float>(2,i) / pnts3D.at<float>(3,i); 
     }
+    
     return depth_of_point;
 }
