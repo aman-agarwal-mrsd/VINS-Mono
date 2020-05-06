@@ -473,9 +473,14 @@ sensor_msgs::ChannelFloat32 FeatureTracker::computeDepthMap2(const cv::Mat &_img
     float k1 = -2.9545645106987750e-01, k2 = 8.6623215640186171e-02, p1 = 2.0132892276082517e-06, p2 = 1.3924531371276508e-05;
     cv::Mat distortion_coefficients_cam0 = (Mat1d(1, 4) << k1, k2, p1, p2); 
 
+    float fx_1 = 4.6009781682258682e+02, fy_1 = 4.5890983492218902e+02, cx_1 = 3.7314916359808268e+02, cy_1 = 2.5440734973672119e+02;
+    Mat intrinsic_cam1 = (Mat1d(3, 3) << fx_1, 0, cx_1, 0, fy_1, cy_1, 0, 0, 1);
+    float k1_1 = -2.9294124381930947e-01, k2_1 = 8.4798002331543665e-02, p1_1 = -2.9984646536002372e-04, p2_1 = 3.0028216325237329e-04;
+    Mat distortion_coefficients_cam1 = (Mat1d(1, 4) << k1_1, k2_1, p1_1, p2_1);
+
     double alpha = 1;
     Mat new_intrinsic_cam0 = getOptimalNewCameraMatrix(intrinsic_cam0,distortion_coefficients_cam0,{752,480},alpha);
-    Mat new_intrinsic_cam1 = new_intrinsic_cam0; 
+    Mat new_intrinsic_cam1 = getOptimalNewCameraMatrix(intrinsic_cam1,distortion_coefficients_cam1,{752,480},alpha);
 
     //get transform from camera0 to camera 1
     cv::Mat body2cam0 = (cv::Mat1d(4,4) << 0.0148655429818, -0.999880929698, 0.00414029679422, -0.0216401454975, 0.999557249008, 0.0149672133247, 0.025715529948,  -0.064676986768, -0.0257744366974, 0.00375618835797, 0.999660727178, 0.00981073058949, 0, 0, 0, 1);
