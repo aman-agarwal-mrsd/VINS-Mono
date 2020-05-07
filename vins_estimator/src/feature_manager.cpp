@@ -1,4 +1,5 @@
 #include "feature_manager.h"
+#include <ros/ros.h>
 
 int FeaturePerId::endFrame()
 {
@@ -51,6 +52,8 @@ bool FeatureManager::addFeatureCheckParallax(int frame_count, const map<int, vec
     last_track_num = 0;
     for (auto &id_pts : image)
     {
+        //TODO: initialize new featureperframe to have depth information
+        // Initializes by an eigen matrix of 7x1 and td, here its initializing by the first feature in the image
         FeaturePerFrame f_per_fra(id_pts.second[0].second, td);
 
         int feature_id = id_pts.first;
@@ -220,7 +223,7 @@ void FeatureManager::triangulate(Vector3d Ps[], Vector3d tic[], Matrix3d ric[])
         Eigen::Matrix3d R0 = Rs[imu_i] * ric[0];
         P0.leftCols<3>() = Eigen::Matrix3d::Identity();
         P0.rightCols<1>() = Eigen::Vector3d::Zero();
-
+        double stereo_depth = -1;
         for (auto &it_per_frame : it_per_id.feature_per_frame)
         {
             imu_j++;
@@ -237,7 +240,10 @@ void FeatureManager::triangulate(Vector3d Ps[], Vector3d tic[], Matrix3d ric[])
             svd_A.row(svd_idx++) = f[1] * P.row(2) - f[2] * P.row(1);
 
             if (imu_i == imu_j)
+            {
+                stereo_depth = it_per_frame.depth;
                 continue;
+            }
         }
         ROS_ASSERT(svd_idx == svd_A.rows());
         Eigen::Vector4d svd_V = Eigen::JacobiSVD<Eigen::MatrixXd>(svd_A, Eigen::ComputeThinV).matrixV().rightCols<1>();
@@ -245,8 +251,20 @@ void FeatureManager::triangulate(Vector3d Ps[], Vector3d tic[], Matrix3d ric[])
         //it_per_id->estimated_depth = -b / A;
         //it_per_id->estimated_depth = svd_V[2] / svd_V[3];
 
-        it_per_id.estimated_depth = svd_method;
-        //it_per_id->estimated_depth = INIT_DEPTH;
+        //TODO: can change estimated depth here but need to understand exactly how this variable is used
+        // ROS_INFO("Stereo Depth: %f, Triangulation: %f", stereo_depth, svd_method);
+
+        if (stereo_depth > 0 && stereo_depth < 100)
+        {
+            it_per_id.estimated_depth = (svd_method + stereo_depth)*0.5;
+            ROS_INFO("Stereo Depth: %f, Triangulation: %f", stereo_depth, svd_method);
+        }
+        else
+        {
+            it_per_id.estimated_depth = svd_method;
+        }
+        
+        ROS_INFO("estimated depth is: %f", it_per_id.estimated_depth);
 
         if (it_per_id.estimated_depth < 0.1)
         {

@@ -54,7 +54,7 @@ void readParameters(ros::NodeHandle &n)
     FREQ = fsSettings["freq"]; //set to 10Hz
     F_THRESHOLD = fsSettings["F_threshold"]; // set to 1.0
     SHOW_TRACK = fsSettings["show_track"]; //set to 1, publish tracking image as topic
-    EQUALIZE = fsSettings["equalize"]; // if image is too dark or light, turn on equalize to find enough features
+    EQUALIZE = fsSettings["equalize"]; // set to 1, if image is too dark or light, turn on equalize to find enough features
     FISHEYE = fsSettings["fisheye"];
     if (FISHEYE == 1)
         FISHEYE_MASK = VINS_FOLDER_PATH + "config/fisheye_mask.jpg";

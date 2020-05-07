@@ -135,8 +135,10 @@ void Estimator::processImage(const map<int, vector<pair<int, Eigen::Matrix<doubl
     ROS_DEBUG("number of feature: %d", f_manager.getFeatureCount());
     Headers[frame_count] = header;
 
+    // Creating an Image frame object and adding point features and the IMU pre-integration
     ImageFrame imageframe(image, header.stamp.toSec());
     imageframe.pre_integration = tmp_pre_integration;
+    // Add the new image-frame to a map of time to image_frame 
     all_image_frame.insert(make_pair(header.stamp.toSec(), imageframe)); //current image frame into all image frames
     tmp_pre_integration = new IntegrationBase{acc_0, gyr_0, Bas[frame_count], Bgs[frame_count]};
 
@@ -177,7 +179,7 @@ void Estimator::processImage(const map<int, vector<pair<int, Eigen::Matrix<doubl
                 slideWindow();
                 f_manager.removeFailures();
                 ROS_INFO("Initialization finish!");
-                last_R = Rs[WINDOW_SIZE];
+                last_R = Rs[WINDOW_SIZE]; 
                 last_P = Ps[WINDOW_SIZE];
                 last_R0 = Rs[0];
                 last_P0 = Ps[0];
@@ -191,7 +193,7 @@ void Estimator::processImage(const map<int, vector<pair<int, Eigen::Matrix<doubl
     else
     {
         TicToc t_solve;
-        solveOdometry();
+        solveOdometry(); // this function calls triangulate
         ROS_DEBUG("solver costs: %fms", t_solve.toc());
 
         if (failureDetection())
@@ -219,6 +221,8 @@ void Estimator::processImage(const map<int, vector<pair<int, Eigen::Matrix<doubl
         last_P0 = Ps[0];
     }
 }
+
+
 bool Estimator::initialStructure()
 {
     TicToc t_sfm;
@@ -474,6 +478,8 @@ bool Estimator::relativePose(Matrix3d &relative_R, Vector3d &relative_T, int &l)
     return false;
 }
 
+/* Only computes odometry if frame count >= window_size
+   and we have already solved an Initial Estimate */
 void Estimator::solveOdometry()
 {
     if (frame_count < WINDOW_SIZE)
@@ -547,6 +553,7 @@ void Estimator::double2vector()
                                                       para_Pose[0][4],
                                                       para_Pose[0][5]).toRotationMatrix());
     double y_diff = origin_R0.x() - origin_R00.x();
+
     //TODO
     Matrix3d rot_diff = Utility::ypr2R(Vector3d(y_diff, 0, 0));
     if (abs(abs(origin_R0.y()) - 90) < 1.0 || abs(abs(origin_R00.y()) - 90) < 1.0)
@@ -801,7 +808,6 @@ void Estimator::optimization()
                 }     
             }
         }
-
     }
 
     ceres::Solver::Options options;

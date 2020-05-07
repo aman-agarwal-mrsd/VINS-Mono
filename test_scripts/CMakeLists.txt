@@ -1,0 +1,5 @@
+cmake_minimum_required(VERSION 2.8)
+project( test_scripts )
+find_package( OpenCV REQUIRED )
+add_executable( stereo_test stereo_test_angela.cpp )
+target_link_libraries( stereo_test ${catkin_LIBRARIES} ${OpenCV_LIBS} )

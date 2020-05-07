@@ -17,18 +17,21 @@ using namespace Eigen;
 
 class FeaturePerFrame
 {
+  //TODO: add new variable to track depth
   public:
     FeaturePerFrame(const Eigen::Matrix<double, 7, 1> &_point, double td)
     {
         point.x() = _point(0);
         point.y() = _point(1);
-        point.z() = _point(2);
+        point.z() = 1;
         uv.x() = _point(3);
         uv.y() = _point(4);
         velocity.x() = _point(5); 
         velocity.y() = _point(6); 
         cur_td = td;
+        depth = _point(2);
     }
+    double depth;
     double cur_td;
     Vector3d point;
     Vector2d uv;

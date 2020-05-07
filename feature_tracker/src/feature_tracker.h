@@ -16,6 +16,11 @@
 #include "parameters.h"
 #include "tic_toc.h"
 
+#include <sensor_msgs/Image.h>
+#include <sensor_msgs/image_encodings.h>
+#include <sensor_msgs/PointCloud.h>
+#include <sensor_msgs/Imu.h>
+
 using namespace std;
 using namespace camodocal;
 using namespace Eigen;
@@ -45,6 +50,10 @@ class FeatureTracker
     void rejectWithF();
 
     void undistortedPoints();
+
+    sensor_msgs::PointCloud computeDepthMap(const sensor_msgs::ImageConstPtr &img_msg0, const sensor_msgs::ImageConstPtr &img_msg1, const sensor_msgs::PointCloudConstPtr &feature_points);
+
+    sensor_msgs::ChannelFloat32 computeDepthMap2(const cv::Mat &_img0, const cv::Mat &_img1, const vector<cv::Point2f> &feature_points);
 
     cv::Mat mask;
     cv::Mat fisheye_mask;

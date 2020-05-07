@@ -13,7 +13,11 @@
 
 vector<uchar> r_status;
 vector<float> r_err;
-queue<sensor_msgs::ImageConstPtr> img_buf;
+// queue<sensor_msgs::ImageConstPtr> img_buf;
+// queue<sensor_msgs::ImageConstPtr> img1_buf;
+sensor_msgs::ImageConstPtr img0, img1;
+sensor_msgs::PointCloudPtr fp;
+
 
 // Publishers for the 3 topics the node publishes to
 ros::Publisher pub_img,pub_match;
@@ -77,7 +81,7 @@ void img_callback(const sensor_msgs::ImageConstPtr &img_msg)
 
     // handles image message and stores information in msg, ptr
     cv_bridge::CvImageConstPtr ptr;
-    if (img_msg->encoding == "8UC1")
+    if (img_msg->encoding == "8UC1") // Euroc: is mono8
     {
         sensor_msgs::Image img;
         img.header = img_msg->header;
@@ -93,6 +97,7 @@ void img_callback(const sensor_msgs::ImageConstPtr &img_msg)
         ptr = cv_bridge::toCvCopy(img_msg, sensor_msgs::image_encodings::MONO8);
 
     cv::Mat show_img = ptr->image;
+    // ROS_INFO("NODE Image Size: %d", ptr->image.size());
     TicToc t_r;
     // Reading image from all cameras
     for (int i = 0; i < NUM_OF_CAM; i++)
@@ -114,6 +119,7 @@ void img_callback(const sensor_msgs::ImageConstPtr &img_msg)
                 clahe->apply(ptr->image.rowRange(ROW * i, ROW * (i + 1)), trackerData[i].cur_img);
             }
             else
+                //adding image to current image
                 trackerData[i].cur_img = ptr->image.rowRange(ROW * i, ROW * (i + 1));
         }
 
@@ -253,7 +259,7 @@ int main(int argc, char **argv)
     }
 
     ros::Subscriber sub_img = n.subscribe(IMAGE_TOPIC, 100, img_callback);
-
+    // ros::Subscriber sub_img = n.subscribe(IMAGE_TOPIC, 100, img2_callback);
     pub_img = n.advertise<sensor_msgs::PointCloud>("feature", 1000);
     pub_match = n.advertise<sensor_msgs::Image>("feature_img",1000);
     pub_restart = n.advertise<std_msgs::Bool>("restart",1000);

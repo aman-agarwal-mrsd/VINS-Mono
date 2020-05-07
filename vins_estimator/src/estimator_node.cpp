@@ -212,6 +212,7 @@ void process()
 {
     while (true)
     {
+        ROS_INFO("IN PROCESS");
         std::vector<std::pair<std::vector<sensor_msgs::ImuConstPtr>, sensor_msgs::PointCloudConstPtr>> measurements;
         std::unique_lock<std::mutex> lk(m_buf);
         con.wait(lk, [&]
@@ -321,6 +322,8 @@ void process()
                 double velocity_x = img_msg->channels[3].values[i];
                 double velocity_y = img_msg->channels[4].values[i];
                 ROS_ASSERT(z == 1); //ensures undistortion/normalization
+                // TODO Copy the estimated depth to z
+                z = img_msg->channels[5].values[i];
                 Eigen::Matrix<double, 7, 1> xyz_uv_velocity;
                 xyz_uv_velocity << x, y, z, p_u, p_v, velocity_x, velocity_y;
                 image[feature_id].emplace_back(camera_id,  xyz_uv_velocity);
@@ -367,8 +370,10 @@ int main(int argc, char **argv)
 
     registerPub(n);
 
+    //TODO: replace image subscriber to subscribe to /feature_tracker/feature_with_depth
+
     ros::Subscriber sub_imu = n.subscribe(IMU_TOPIC, 2000, imu_callback, ros::TransportHints().tcpNoDelay());
-    ros::Subscriber sub_image = n.subscribe("/feature_tracker/feature", 2000, feature_callback);
+    ros::Subscriber sub_image = n.subscribe("/feature_tracker/feature_with_depth", 2000, feature_callback);
     ros::Subscriber sub_restart = n.subscribe("/feature_tracker/restart", 2000, restart_callback);
     ros::Subscriber sub_relo_points = n.subscribe("/pose_graph/match_points", 2000, relocalization_callback);
 
